@@ -41,6 +41,8 @@ COMPOUNDS = {
     "68Ga-PSMA": Compound(68, 75000, delivery_times=Anytime),
 }
 
+COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}
+
 PROCEDURES = {
     "18F-FDG (onko)": Procedure(COMPOUNDS["18F-FDG"], [60], [25], 2.5),
     "18F-FDG (neuro)": Procedure(COMPOUNDS["18F-FDG"], [0], [60], None, 150),
@@ -91,4 +93,10 @@ class Patient:
     def baseline_cost(self):
         return (
             self.procedure.required_activity(self.weight) * self.procedure.compound.cost
+        )
+
+    def desired_activity(self):
+        return (
+            self.procedure.required_fixed_dose
+            or self.weight * self.procedure.required_specific_dose
         )

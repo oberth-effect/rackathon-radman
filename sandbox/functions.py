@@ -129,8 +129,9 @@ def solve(timetable, schedule, order, solutions):
         while True:
             s_ms = s_d + wait + acc_time // STEP
             s_me = s_ms + measure_time // STEP
-            if np.any(timetable[max(0, s_ms - 1) : s_me + 1] != Timestamp.Empty):
-                wait += 1
+            colisions = timetable[max(0, s_ms - 1) : s_me + 1] != Timestamp.Empty
+            if np.any(colisions):
+                wait += np.max(np.where(colisions)) + 1
                 continue
             proposals[0].append((s_ms, s_me))
             proposals[1].append(wait)

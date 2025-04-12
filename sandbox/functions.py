@@ -109,7 +109,7 @@ def solve(timetable, schedule, order, milking, solutions):
             new_schedule.append(
                 (min2time(DAY_START_MIN + s_m2s * STEP), Timestamp.Methionin_2)
             )
-            solve(new_timetable, new_schedule, order[1:], solutions)
+            solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
     elif len(procedure.measure_time) == 1:
         acc_time = procedure.acc_time[0]

@@ -1,8 +1,7 @@
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, FormView
-from django.views.generic import UpdateView
-from django.views.generic import DeleteView
-from django.http import HttpResponseRedirect
+from django.views.generic import UpdateView, DeleteView, View
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.forms import modelformset_factory
 from django.shortcuts import get_object_or_404, render
@@ -119,4 +118,23 @@ class UsedDoseCreateView(CreateView):
     form_class = UsedDoseForm
     template_name = 'radiopharma/useddose_form.html'
     success_url = reverse_lazy('batch_list')
+
+
+class DeliveryTimesListView(ListView):
+    model = DeliveryTimes
+    template_name = 'radiopharma/delivery_times_list.html'
+    context_object_name = 'delivery_times'
+
+
+class DeliveryTimesCreateView(CreateView):
+    model = DeliveryTimes
+    form_class = DeliveryTimesForm
+    template_name = 'radiopharma/delivery_times_form.html'
+    success_url = reverse_lazy('delivery_times_list')
+
+
+class DeliveryTimesDeleteView(DeleteView):
+    model = DeliveryTimes
+    success_url = reverse_lazy('delivery_times_list')
+
 

@@ -18,3 +18,7 @@ class Order(models.Model):
     activity = models.DecimalField(max_digits=10, decimal_places=2)
     time_slot = models.ForeignKey(DeliveryTimes, on_delete=models.CASCADE)
     qa_activity = models.DecimalField(max_digits=10, decimal_places=2)
+
+class ScheduleSettings(models.Model):
+    start_time = models.TimeField()
+    end_time = models.TimeField()

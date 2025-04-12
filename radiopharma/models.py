@@ -51,6 +51,12 @@ class DeliveryTimes(models.Model):
     compound = models.ForeignKey(Compound, on_delete=models.CASCADE)
     time = models.TimeField()
 
+    class Meta:
+        ordering = ['time']  # Sort delivery times by time
+
+    def delete_delivery_time(self):
+        self.delete()
+
     def __str__(self):
         return f"{self.time} for {self.compound.name}"
 

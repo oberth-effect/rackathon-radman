@@ -21,6 +21,7 @@ from radiopharma import views as rpv
 from procedures import views as pv
 from patients import views as ptv
 from schedule import views as sv  # Import the schedule views
+from radiopharma.views import DeliveryTimesListView, DeliveryTimesCreateView, DeliveryTimesDeleteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +32,9 @@ urlpatterns = [
     path('radiopharma/add/', rpv.BatchCreateView.as_view(), name='batch_add'),
     path('radiopharma/useddose/add/', rpv.UsedDoseCreateView.as_view(), name='useddose_add'),
     path('radiopharma/batch/<int:pk>/discard/', rpv.BatchDiscardView.as_view(), name='batch_discard'),
+    path('radiopharma/delivery_times/', DeliveryTimesListView.as_view(), name='delivery_times_list'),
+    path('radiopharma/compound/delivery_times/add/', DeliveryTimesCreateView.as_view(), name='delivery_times_add'),
+    path('radiopharma/delivery_times/<int:pk>/delete/', DeliveryTimesDeleteView.as_view(), name='delivery_times_delete'),
     path('procedures/', pv.ProcedureListView.as_view(), name='procedure_list'),
     path('procedures/create/', pv.ProcedureCreateView.as_view(), name='procedure_create'),
     path('procedures/<int:pk>/edit/', pv.ProcedureUpdateView.as_view(), name='procedure_edit'),
@@ -45,3 +49,4 @@ urlpatterns = [
     path('schedule/clear/', sv.ClearScheduleView.as_view(), name='schedule_clear'),
     path('schedule/calculate/', sv.CalculateScheduleView.as_view(), name='schedule_calculate'),
 ]
+

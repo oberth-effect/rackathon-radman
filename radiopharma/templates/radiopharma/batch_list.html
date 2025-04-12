@@ -2,11 +2,14 @@
 
 {% block content %}
     <h1 class="text-2xl font-bold text-gray-800 mb-4">Batches</h1>
-    <a href="{% url 'batch_add' %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Add</a>
-    <a href="{% url 'useddose_add' %}" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Log Usage</a>
+    <a href="{% url 'batch_add' %}"
+       class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Add</a>
+    <a href="{% url 'useddose_add' %}"
+       class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Log Usage</a>
     <form method="get" class="mb-4">
         <label class="inline-flex items-center">
-            <input type="checkbox" name="show_discarded" value="true" onchange="this.form.submit()" {% if show_discarded %}checked{% endif %}>
+            <input type="checkbox" name="show_discarded" value="true" onchange="this.form.submit()"
+                   {% if show_discarded %}checked{% endif %}>
             <span class="ml-2 text-gray-700">Show Discarded</span>
         </label>
     </form>
@@ -23,30 +26,37 @@
         </thead>
         <tbody>
         {% for batch in batches %}
-        <tr class="hover:bg-gray-50 {% if batch.discarded %}bg-gray-200{% endif %}">
-            <td class="border border-gray-300 px-4 py-2">{{ batch.batch_name }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ batch.compound.name }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ batch.delivered_activity }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ batch.delivery_time }}</td>
-            <td class="border border-gray-300 px-4 py-2">
-                {{ batch.remaining_activity|floatformat:2 }}
-            </td>
-            <td class="border border-gray-300 px-4 py-2">
-                 {% if not batch.discarded %}
-                     <form method="post" action="{% url 'batch_discard' batch.id %}">
-                         {% csrf_token %}
-                         <button type="submit"
-                                 class="bg-red-700 hover:bg-red-900 text-white font-bold py-1 px-2 rounded">
-                             Discard
-                         </button>
-                     </form>
-                {% endif %}
-            </td>
-        </tr>
+            <tr class="hover:bg-gray-50 {% if batch.discarded %}bg-gray-200{% endif %}">
+                <td class="border border-gray-300 px-4 py-2">{{ batch.batch_name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ batch.compound.name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ batch.delivered_activity }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ batch.delivery_time }}</td>
+                <td class="border border-gray-300 px-4 py-2">
+                    {{ batch.remaining_activity|floatformat:2 }}
+                </td>
+                <td class="border border-gray-300 px-4 py-2">
+                    {% if not batch.discarded %}
+                        <form method="post" action="{% url 'batch_discard' batch.id %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="bg-red-700 hover:bg-red-900 text-white font-bold py-1 px-2 rounded">
+                                Discard
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
         {% empty %}
-        <tr>
-            <td colspan="5" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No batches available.</td>
-        </tr>
+            <tr>
+                <td colspan="6" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No batches
+                    available.
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6" class="border border-gray-300 px-4 py-2 text-gray-500" align="center">
+                    <img src="https://i.imgflip.com/9qmg84.jpg" />
+                </td>
+            </tr>
         {% endfor %}
         </tbody>
     </table>
@@ -57,7 +67,7 @@
     <script>
         const graphData = {{ graph_data|safe }};
         const usedDoses = {{ used_doses|safe }};
-        
+
         const traces = graphData.batches.map(batch => ({
             x: graphData.times,
             y: batch.activities,
@@ -84,7 +94,7 @@
                 tickformat: '%H:%M', // Format timestamps as HH:MM
                 type: 'date',
             },
-            yaxis: { title: 'Activity' },
+            yaxis: {title: 'Activity'},
             annotations: annotations
         };
 

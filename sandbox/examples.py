@@ -55,13 +55,14 @@ scenario_3 = {
         Patient(id="h", weight=88, procedure=PROC[Timestamp.FDGO]),
     ],
     'counts': [8, 0, 0, 0, 0, 0],
-    'schedule': [(time(7,40), 'a'),
-                 (time(8,15),  'b'),
-                 (time(8,57), 'c'),
-                 (time(9,23), 'e'),
-                 (time(9,48), 'c'),
-                 (time(10,26), 'f'),
-                 (time(11,0), 'g')
+    'schedule': [(time(7,56), 'a'),
+                 (time(8,37), 'b'),
+                 (time(9,9), 'f'),
+                 (time(9,41), 'c'),
+                 (time(10,19), 'd'),
+                 (time(10,51), 'e'),
+                 (time(11,34), 'g'),
+                 (time(12,16), 'h')
                  ]
 }
 
@@ -81,7 +82,18 @@ scenario_4 = {
 
     ],
     'counts': [11, 0, 0, 0, 0, 0],
-    'schedule': [(time, (procedura, patient))]
+    'schedule': [(time(7,43), 'f'),
+                 (time(8,14), 'a'),
+                 (time(8,40), 'g'),
+                 (time(9,5), 'i'),
+                 (time(9,35), 'd'),
+                 (time(10,20), 'b'),
+                 (time(10,50), 'c'),
+                 (time(11,40), 'e'),
+                 (time(12,40), 'h'),
+                 (time(13,20), 'j'),
+                 (time(13,58), 'k')
+                 ]
 }
 
 scenario_5 = {
@@ -99,5 +111,15 @@ scenario_5 = {
         Patient(id="k", weight=100, procedure=PROC[Timestamp.SomaKit]),
     ],
     'counts': [9, 0, 0, 0, 2, 0],
-    'schedule': [(time, (procedura, patient))]
+    'schedule': [(time(7,37), 'd'),
+                 (time(8,25), 'f'),
+                 (time(8,58), 'h'),
+                 (time(9,25), 'e'),
+                 (time(9,57), 'a'),
+                 (time(10,49), 'b'),
+                 (time(11,29), 'g'),
+                 (time(12,0), 'i'),
+                 (time(12,30), 'j'),
+                 (time(13,2), 'k')
+                 ]
 }

@@ -153,7 +153,9 @@ def solve(timetable, schedule, order, milking, solutions):
             new_schedule = schedule.copy()
             new_schedule.append((t_ms, proc_type))
             if include_all and milking is None:
-                new_milking = (t_ms, add(t_ms, min2time(procedure.compound.delivery_times.cooldown)))
+                s_m1 = DAY_START_MIN + (s_ms - acc_time) * STEP
+                s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
+                new_milking = (min2time(s_m1), min2time(s_m2))
                 solve(new_timetable, new_schedule, order[1:], new_milking, solutions)
             solve(new_timetable, new_schedule, order[1:], milking, solutions)
 

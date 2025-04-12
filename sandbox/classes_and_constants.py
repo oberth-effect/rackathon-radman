@@ -85,6 +85,10 @@ DAY_LEN = DAY_LEN_HRS // STEP
 DAY_START = time(6, 0)
 DAY_START_MIN = DAY_START.hour * 60 + DAY_START.minute
 TIMETABLE = np.array([Timestamp.Empty] * DAY_LEN)
+A_GE_0 = 1.85 * 10**3
+lambda_GE = 0.00256/24/60
+lambda_GA = 0.0102
+
 
 
 @dataclass

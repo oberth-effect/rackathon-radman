@@ -16,6 +16,8 @@ from sandbox.classes_and_constants import (
     PROC,
     STEP,
     DAY_LEN,
+    Anytime,
+    COMPOUND_TO_NAME,
 )
 
 
@@ -93,13 +95,20 @@ def get_mins_since_last_delivery(
     return result
 
 
+def get_last_delivery_time(proc_start: time, delivery_times: list[time]) -> time:
+    delivery_times_before = [dt for dt in delivery_times if dt <= proc_start]
+
+    assert delivery_times_before, "No delivery time before start of procedure."
+
+    return max(delivery_times_before)
+
+
 def reorder_patients_by_activity(
     patients: list[Patient], mins_since_last_del_list: list[int]
 ) -> list[Patient]:
     patients_sorted = sorted(
         patients,
-        key=lambda p: p.procedure.required_fixed_dose
-        or p.weight * p.procedure.required_specific_dose,
+        key=lambda p: p.desired_activity(),
         reverse=True,
     )
     mins_indices_sorted_by_value = sorted(
@@ -155,20 +164,30 @@ def get_doses_to_order_and_profit_for_schedule(
 ) -> (dict[Compound, dict[time, float]], float):
     doses_to_order = {}
 
+    compounds_to_be_ordered = [
+        cmp for cmp in COMPOUNDS if COMPOUNDS[cmp].delivery_times != Anytime
+    ]
     # initialize doses_to_order
-    for rp in COMPOUNDS:
-        doses_to_order[rp] = {t: (0, []) for t in COMPOUNDS[rp]}
+    doses_to_order = {
+        comp_name: {t: (0, []) for t in COMPOUNDS[comp_name].delivery_times}
+        for comp_name in compounds_to_be_ordered
+    }
 
-    for patient in schedule:
-        rp = ...  # radiopharm/compound
-        a = ...  # activity
-        t = ...  # start of accumulation
-        t_rp = ...  # closest rp delivery time
-        msd = t - t_rp  # minutes since delivery
+    for start_time, (procedure, patient) in schedule.items():
+        cmp = COMPOUND_TO_NAME.get(id(procedure.compound))  # radiopharm/compound
+        a = patient.desired_activity()  # activity
+        delivery_time = get_last_delivery_time(
+            start_time, procedure.compound.delivery_times
+        )
+        ssd = diff(start_time, delivery_time) * 60  # seconds since delivery
 
-        doses_to_order[rp][t_rp][1].append(msd)
-        doses_to_order[rp][t_rp][0] += (
-            math.exp(rp.half_life * sum(doses_to_order[rp][t_rp][1])) * a
+        doses_to_order[cmp][delivery_time][1].append(ssd)
+        doses_to_order[cmp][delivery_time][0] += (
+            math.exp(
+                procedure.compound.half_life
+                * sum(doses_to_order[cmp][delivery_time][1])
+            )
+            * a
         )
 
     # extract only the first part of the tuple

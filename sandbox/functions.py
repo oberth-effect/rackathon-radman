@@ -84,8 +84,8 @@ def solve(timetable, schedule, order, solutions):
                 if s_m1e > len(timetable) or s_m2e > len(timetable):
                     break
 
-                colisions_1 = timetable[max(0, s_m1s - 1): s_m1e] != Timestamp.Empty
-                colisions_2 = timetable[s_m2s - 1: s_m2s] != Timestamp.Empty
+                colisions_1 = timetable[max(0, s_m1s - 1) : s_m1e] != Timestamp.Empty
+                colisions_2 = timetable[s_m2s - 1 : s_m2s] != Timestamp.Empty
                 if np.any(colisions_1) or np.any(colisions_2):
                     max_1 = np.max(np.where(colisions_1)) if np.any(colisions_1) else 0
                     max_2 = np.max(np.where(colisions_2)) if np.any(colisions_2) else 0
@@ -102,11 +102,15 @@ def solve(timetable, schedule, order, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             (s_m1s, s_m1e), (s_m2s, s_m2e) = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_m1s: s_m1e] = proc_type
-            new_timetable[s_m2s: s_m2e] = proc_type
+            new_timetable[s_m1s:s_m1e] = proc_type
+            new_timetable[s_m2s:s_m2e] = proc_type
             new_schedule = schedule.copy()
-            new_schedule.append((min2time(DAY_START_MIN + s_m1s * STEP), Timestamp.Methionin_1))
-            new_schedule.append((min2time(DAY_START_MIN + s_m2s * STEP), Timestamp.Methionin_2))
+            new_schedule.append(
+                (min2time(DAY_START_MIN + s_m1s * STEP), Timestamp.Methionin_1)
+            )
+            new_schedule.append(
+                (min2time(DAY_START_MIN + s_m2s * STEP), Timestamp.Methionin_2)
+            )
             solve(new_timetable, new_schedule, order[1:], solutions)
 
     elif len(procedure.measure_time) == 1:
@@ -139,10 +143,11 @@ def solve(timetable, schedule, order, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             s_ms, s_me = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_ms : s_me] = proc_type
+            new_timetable[s_ms:s_me] = proc_type
             new_schedule = schedule.copy()
             new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_type))
             solve(new_timetable, new_schedule, order[1:], solutions)
+
 
 def get_mins_since_last_delivery(
     proc_starts: list[time], delivery_times: list[time]
@@ -187,11 +192,10 @@ def reorder_patients_by_activity(
 
 
 def get_patient_order_for_procedure_order(
-    ts_and_procedures: list[tuple[datetime.time, Procedure]],
+    ts_and_procedures: list[tuple[datetime.time, Timestamp]],
     patients: list[Patient],
 ) -> list[tuple[datetime.time, tuple[Procedure, Patient]]] | None:
     # get optimal schedule of patients from schedule of procedures
-
     result = []  # order patient per interval_type according to their activities
     schemes = [ts_and_proc[1] for ts_and_proc in ts_and_procedures]
 
@@ -305,6 +309,19 @@ def main():
     #     solutions = pickle.load(handle)
 
     print(len(solutions))
+
+
+def deduplicate(pairs: list[list[tuple]]) -> list[list[tuple]]:
+    seen = set()
+    result = []
+
+    for pair in pairs:
+        key = frozenset(pair)  # unordered, hashable
+        if key not in seen:
+            seen.add(key)
+            result.append(pair)
+
+    return result
 
 
 if __name__ == "__main__":

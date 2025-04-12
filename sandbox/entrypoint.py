@@ -7,6 +7,7 @@ from sandbox.functions import (
     get_patient_order_for_procedure_order,
     get_doses_to_order_and_cost_for_schedule,
     solve,
+    deduplicate,
 )
 
 from sympy.utilities.iterables import multiset_permutations
@@ -53,7 +54,9 @@ if __name__ == "__main__":
     patient_order_best = None
     doses_to_order_best = None
 
-    for procedure_perm in solutions:
+    solutions_deduplicated = deduplicate(solutions)
+
+    for procedure_perm in solutions_deduplicated:
         patient_order = get_patient_order_for_procedure_order(procedure_perm, patients)
         if patient_order is not None:
             doses_to_order, cost = get_doses_to_order_and_cost_for_schedule(

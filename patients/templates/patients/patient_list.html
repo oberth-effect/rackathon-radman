@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Patients</h1>
+    <a href="{% url 'patient_add' %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Add Patient</a>
+    <table class="min-w-full table-auto border-collapse border border-gray-300">
+        <thead class="bg-gray-100">
+        <tr>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Name</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Surname</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">ID Number</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Weight</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+    {% for patient in object_list %}
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">
+                <a href="{% url 'patient_edit' patient.id %}" class="text-blue-500 hover:underline">
+                    {{ patient.name }}
+                    </a>
+                </td>
+                <td class="border border-gray-300 px-4 py-2">{{ patient.surname }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ patient.id_number }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ patient.weight }}</td>
+                <td class="border border-gray-300 px-4 py-2">
+                    <form action="{% url 'patient_delete' patient.id %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Delete</button>
+                    </form>
+                </td>
+            </tr>
+    {% empty %}
+            <tr>
+                <td colspan="5" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No patients available.</td>
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Procedures</h1>
+    <a href="{% url 'procedure_create' %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">Add</a>
+    <table class="min-w-full table-auto border-collapse border border-gray-300">
+        <thead class="bg-gray-100">
+        <tr>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Name</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Compound</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Required Specific Dose</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Required Fixed Dose</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Accumulation Time</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Measuring Time</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Accumulation Time 2</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Measuring Time 2</th>
+        </tr>
+        </thead>
+        <tbody>
+    {% for procedure in object_list %}
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">
+                    <a href="{% url 'procedure_edit' procedure.id %}" class="text-blue-500 hover:underline">
+                        {{ procedure.name }}
+                    </a>
+                </td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.compound }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.required_specific_dose }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.required_fixed_dose }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.accumulation_time }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.measuring_time }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.accumulation_time2 }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ procedure.measuring_time2 }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="8" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No procedures available.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}

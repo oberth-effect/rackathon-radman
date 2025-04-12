@@ -88,8 +88,10 @@ def process(permutation):
         t = add(t, min2time(STEP))
     return timetable
 
+
 def effective_cost(compound, t):
     return compound.cost * math.exp(compound.half_life * t * 60)
+
 
 def dist_to_closest(compound, t):
     if compound.delivery_times == Anytime:
@@ -100,6 +102,7 @@ def dist_to_closest(compound, t):
     if len(delivery_times) == 0:
         return np.inf
     return min(delivery_times)
+
 
 def solve(timetable, schedule, order, solutions):
     if len(order) == 0:
@@ -126,7 +129,7 @@ def solve(timetable, schedule, order, solutions):
         while True:
             s_ms = s_d + wait + acc_time // STEP
             s_me = s_ms + measure_time // STEP
-            if np.any(timetable[max(0, s_ms-1):s_me+1] != Timestamp.Empty):
+            if np.any(timetable[max(0, s_ms - 1) : s_me + 1] != Timestamp.Empty):
                 wait += 1
                 continue
             proposals[0].append((s_ms, s_me))
@@ -135,10 +138,11 @@ def solve(timetable, schedule, order, solutions):
 
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             new_timetable = timetable.copy()
-            new_timetable[s_ms:s_me+1] = proc_type
+            new_timetable[s_ms : s_me + 1] = proc_type
             new_schedule = schedule.copy()
-            new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), procedure))
+            new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_type))
             solve(new_timetable, new_schedule, order[1:], solutions)
+
 
 def get_mins_since_last_delivery(
     proc_starts: list[time], delivery_times: list[time]
@@ -299,6 +303,7 @@ def main():
 
     with open("timetables.pickle", "wb") as handle:
         pickle.dump(solutions, handle)
+
 
 if __name__ == "__main__":
     main()

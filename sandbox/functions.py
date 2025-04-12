@@ -54,7 +54,7 @@ def any_overlap(blocks_to_add, blocked_blocks):
 
 def solve(timetable, schedule, order, milking, solutions):
     if len(order) == 0:
-        solutions.append(schedule)
+        solutions.append((schedule, milking))
         return
 
     proc_type = order[0]

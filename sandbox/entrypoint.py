@@ -54,9 +54,9 @@ if __name__ == "__main__":
     patient_order_best = None
     doses_to_order_best = None
 
-    solutions_deduplicated = deduplicate(solutions)
+    #solutions_deduplicated = deduplicate(solutions)
 
-    for procedure_perm in solutions_deduplicated:
+    for procedure_perm in solutions:
         patient_order = get_patient_order_for_procedure_order(procedure_perm, patients)
         if patient_order is not None:
             doses_to_order, cost = get_doses_to_order_and_cost_for_schedule(

@@ -38,9 +38,10 @@ PROC = {
   Scheme.Methionin_1: PROCEDURES["11C-MET"],
 }
 
-DAY_LEN = 8 * 12
+DAY_LEN_HRS = 8 * 60
 DAY_START = time(6, 0)
 STEP = 5
+DAY_LEN = DAY_LEN_HRS // STEP
 
 def min2time(min: int):
     return time(min // 60, min % 60)
@@ -187,7 +188,7 @@ def get_doses_to_order_and_profit_for_schedule(
     }
 
 def main():
-    counts = [3, 1, 2, 3, 2, 1, 0]
+    counts = [8, 2, 1, 2, 0, 0, 0]
     meas_len = 0
     for cnt, sch in zip(counts, Scheme.variants()):
         if sch == Scheme.Break or sch == Scheme.Methionin_2:

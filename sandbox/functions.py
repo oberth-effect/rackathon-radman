@@ -48,9 +48,7 @@ def any_overlap(blocks_to_add, blocked_blocks):
     s2 = blocked_blocks[:, 0][np.newaxis, :]
     e2 = blocked_blocks[:, 1][np.newaxis, :]
 
-    overlaps = (s1 < e2) & (s2 < e1)
-
-    return np.any(overlaps)
+    return np.any((s1 < e2) & (s2 < e1))
 
 
 def solve(timetable, schedule, order, solutions):
@@ -61,45 +59,90 @@ def solve(timetable, schedule, order, solutions):
     proc_type = order[0]
     procedure = PROC[proc_type]
 
-    acc_time = procedure.acc_time[0]
-    measure_time = procedure.measure_time[0]
-
     if procedure.compound.delivery_times == Anytime:
         pass
 
     proposals = ([], [])
-    for t_d in procedure.compound.delivery_times:
-        wait = 0
-        s_d = (time2min(t_d) - DAY_START_MIN) // STEP
-        if s_d < 0:
-            raise Exception
 
-        while True:
-            s_ms = s_d + wait + acc_time // STEP
-            s_me = s_ms + measure_time // STEP
-            if s_me > len(timetable):
+    if proc_type == Timestamp.Methionin_1:
+        acc_time_1 = procedure.acc_time[0]
+        acc_time_2 = procedure.acc_time[1]
+        measure_time_1 = procedure.measure_time[0]
+        measure_time_2 = procedure.measure_time[1]
+
+        for t_d in procedure.compound.delivery_times:
+            wait = 0
+            s_d = (time2min(t_d) - DAY_START_MIN) // STEP
+            if s_d < 0:
+                raise Exception
+
+            while True:
+                s_m1s = s_d + wait + acc_time_1 // STEP
+                s_m1e = s_m1s + measure_time_1 // STEP
+                s_m2s = s_m1e + procedure.waiting_time // STEP
+                s_m2e = s_m2s + measure_time_2 // STEP
+                if s_m1e > len(timetable) or s_m2e > len(timetable):
+                    break
+
+                colisions_1 = timetable[max(0, s_m1s - 1): s_m1e] != Timestamp.Empty
+                colisions_2 = timetable[s_m2s - 1: s_m2s] != Timestamp.Empty
+                if np.any(colisions_1) or np.any(colisions_2):
+                    max_1 = np.max(np.where(colisions_1)) if np.any(colisions_1) else 0
+                    max_2 = np.max(np.where(colisions_2)) if np.any(colisions_2) else 0
+                    wait += max(max_1, max_2) + 1
+                    continue
+
+                proposals[0].append(((s_m1s, s_m1e), (s_m2s, s_m2e)))
+                proposals[1].append(wait)
                 break
 
-            colisions = timetable[max(0, s_ms - 1) : s_me] != Timestamp.Empty
-            if np.any(colisions):
-                wait += np.max(np.where(colisions)) + 1
-                continue
+        if len(proposals[1]) == 0:
+            return
 
-            proposals[0].append((s_ms, s_me))
-            proposals[1].append(wait)
-            break
+        for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
+            (s_m1s, s_m1e), (s_m2s, s_m2e) = proposals[0][idx]
+            new_timetable = timetable.copy()
+            new_timetable[s_m1s: s_m1e] = proc_type
+            new_timetable[s_m2s: s_m2e] = proc_type
+            new_schedule = schedule.copy()
+            new_schedule.append((min2time(DAY_START_MIN + s_m1s * STEP), Timestamp.Methionin_1))
+            new_schedule.append((min2time(DAY_START_MIN + s_m2s * STEP), Timestamp.Methionin_2))
+            solve(new_timetable, new_schedule, order[1:], solutions)
 
-    if len(proposals[1]) == 0:
-        return
+    elif len(procedure.measure_time) == 1:
+        acc_time = procedure.acc_time[0]
+        measure_time = procedure.measure_time[0]
+        for t_d in procedure.compound.delivery_times:
+            wait = 0
+            s_d = (time2min(t_d) - DAY_START_MIN) // STEP
+            if s_d < 0:
+                raise Exception
 
-    for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
-        s_ms, s_me = proposals[0][idx]
-        new_timetable = timetable.copy()
-        new_timetable[s_ms : s_me + 1] = proc_type
-        new_schedule = schedule.copy()
-        new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_type))
-        solve(new_timetable, new_schedule, order[1:], solutions)
+            while True:
+                s_ms = s_d + wait + acc_time // STEP
+                s_me = s_ms + measure_time // STEP
+                if s_me > len(timetable):
+                    break
 
+                colisions = timetable[max(0, s_ms - 1) : s_me] != Timestamp.Empty
+                if np.any(colisions):
+                    wait += np.max(np.where(colisions)) + 1
+                    continue
+
+                proposals[0].append((s_ms, s_me))
+                proposals[1].append(wait)
+                break
+
+        if len(proposals[1]) == 0:
+            return
+
+        for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
+            s_ms, s_me = proposals[0][idx]
+            new_timetable = timetable.copy()
+            new_timetable[s_ms : s_me] = proc_type
+            new_schedule = schedule.copy()
+            new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_type))
+            solve(new_timetable, new_schedule, order[1:], solutions)
 
 def get_mins_since_last_delivery(
     proc_starts: list[time], delivery_times: list[time]
@@ -234,7 +277,7 @@ def get_doses_to_order_and_cost_for_schedule(
 
 
 def main():
-    counts = [1, 2, 0, 0, 0, 0, 0]
+    counts = [1, 2, 0, 0, 0, 1, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue

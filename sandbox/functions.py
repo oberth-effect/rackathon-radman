@@ -206,9 +206,12 @@ def get_patient_order_for_procedure_order(
 ) -> list[tuple[datetime.time, tuple[Procedure, Patient]]] | None:
     # get optimal schedule of patients from schedule of procedures
     result = []  # order patient per interval_type according to their activities
-    schemes = [ts_and_proc[1] for ts_and_proc in ts_and_procedures]
+    schemes = list({ts_and_proc[1] for ts_and_proc in ts_and_procedures})
 
-    for scheme in list(set(schemes)):  # iterate over unique procedures
+    if Timestamp.Methionin_2 in schemes:
+        schemes.remove(Timestamp.Methionin_2)
+
+    for scheme in schemes:  # iterate over unique procedures
         # get all patients with this procedure
         procedure = PROC[scheme]
         patients_proc = [

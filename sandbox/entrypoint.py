@@ -19,14 +19,11 @@ from sandbox.classes_and_constants import (
 if __name__ == "__main__":
     patients = [
         Patient(id="a", weight=80, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="b", weight=100, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="c", weight=90, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="g", weight=80, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="h", weight=75, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="i", weight=90, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="b", weight=50, procedure=PROC[Timestamp.Methionin_1]),
+        Patient(id="c", weight=120, procedure=PROC[Timestamp.Methionin_1]),
     ]
 
-    counts = [3, 3, 0, 0, 0, 0, 0]
+    counts = [0, 1, 0, 0, 0, 2]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue

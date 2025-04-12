@@ -19,6 +19,9 @@ from sandbox.classes_and_constants import (
     Timestamp,
     Anytime,
     COMPOUND_TO_NAME,
+    A_GE_0,
+    lambda_GE,
+    lambda_GA,
 )
 
 
@@ -148,7 +151,7 @@ def solve(timetable, schedule, order, milking, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             s_ms, s_me = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_ms : s_me] = proc_type
+            new_timetable[s_ms:s_me] = proc_type
             t_ms = min2time(DAY_START_MIN + s_ms * STEP)
             new_schedule = schedule.copy()
             new_schedule.append((t_ms, proc_type))
@@ -248,6 +251,26 @@ def get_patient_order_for_procedure_order(
         patients_ordered = reorder_patients_by_activity(
             patients_proc, mins_since_last_del
         )
+
+        if isinstance(procedure.compound.delivery_times, Anytime):
+            # return None if there is not enough activity left for SomaKit/PSMA patients from milking
+            remaining_act = {}
+            remaining_act[milking_times[0]] = A_GE_0 * math.exp(
+                -lambda_GE * diff(milking_times[0], time(0, 0))
+            )
+            remaining_act[milking_times[1]] = A_GE_0 * math.exp(
+                -lambda_GE * diff(milking_times[1], time(0, 0))
+            )
+            for pat_somakit, p_start in zip(patients_ordered, procedure_starts):
+                milk_time = get_last_delivery_time(p_start, delivery_times)
+                act_to_deduct = (
+                    math.exp(lambda_GA * diff(p_start, milk_time))
+                    * pat_somakit.desired_activity()
+                )
+                remaining_act[milk_time] = remaining_act[milk_time] - act_to_deduct
+                if remaining_act[milk_time] < 0:
+                    return None
+
         for proc_start, i in zip(procedure_starts, range(len(procedure_starts))):
             result.append((proc_start, (procedure, patients_ordered[i])))
 
@@ -256,47 +279,40 @@ def get_patient_order_for_procedure_order(
 
 def get_doses_to_order_and_cost_for_schedule(
     schedule: list[tuple[datetime.time, tuple[Procedure, Patient]]],
+    milking_times: tuple[datetime.time, datetime.time] | None,
 ) -> (dict[Compound, dict[time, float]], float):
     compounds_to_be_ordered = [
-        cmp for cmp in COMPOUNDS if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
+        cmp
+        for cmp in COMPOUNDS
+        if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
     ]
     # initialize doses_to_order
     doses_to_order = {
-        comp_name: {t: (0, []) for t in COMPOUNDS[comp_name].delivery_times}
+        comp_name: {t: 0 for t in COMPOUNDS[comp_name].delivery_times}
         for comp_name in compounds_to_be_ordered
     }
 
     for start_time, (procedure, patient) in schedule:
-        cmp = COMPOUND_TO_NAME.get(id(procedure.compound))  # radiopharm/compound
-        a = patient.desired_activity()  # activity
-        delivery_time = get_last_delivery_time(
-            start_time, procedure.compound.delivery_times
-        )
-        ssd = diff(start_time, delivery_time) * 60  # seconds since delivery
-
-        activity_to_add = (
-            math.exp(
-                math.log(2)
-                / (procedure.compound.half_life * 60)
-                * sum(doses_to_order[cmp][delivery_time][1])
+        if not isinstance(procedure.compound.delivery_times, Anytime):
+            cmp = COMPOUND_TO_NAME.get(id(procedure.compound))  # radiopharm/compound
+            a = patient.desired_activity()  # activity
+            delivery_time = get_last_delivery_time(
+                start_time, procedure.compound.delivery_times
             )
-            * a
-        )
-        doses_to_order[cmp][delivery_time] = (
-            doses_to_order[cmp][delivery_time][0] + activity_to_add,
-            doses_to_order[cmp][delivery_time][1] + [ssd],
-        )
+            ssd = diff(start_time, delivery_time) * 60  # seconds since delivery
+
+            activity_to_add = (
+                math.exp(math.log(2) / (procedure.compound.half_life * 60) * ssd) * a
+            )
+            doses_to_order[cmp][delivery_time] += activity_to_add
 
     cost = 0
     for cmp, cmp_dose_dict in doses_to_order.items():
         price = COMPOUNDS[cmp].cost
-        cost += sum(value[0] for value in cmp_dose_dict.values()) * price
+        cost += sum(cmp_dose_dict.values()) * price
 
     # extract only the first part of the tuple
-    return {
-        rp: {t: doses_to_order[rp][t][0] for t in doses_to_order[rp]}
-        for rp in doses_to_order
-    }, cost
+    return doses_to_order, cost
 
 
 def main():
@@ -330,17 +346,17 @@ def main():
     print(len(solutions))
 
 
-def deduplicate(pairs: list[list[tuple]]) -> list[list[tuple]]:
-    seen = set()
-    result = []
-
-    for pair in pairs:
-        key = frozenset(pair)  # unordered, hashable
-        if key not in seen:
-            seen.add(key)
-            result.append(pair)
-
-    return result
+# def deduplicate(pairs: list[list[tuple]]) -> list[list[tuple]]:
+#     seen = set()
+#     result = []
+#
+#     for pair in pairs:
+#         key = frozenset(pair)  # unordered, hashable
+#         if key not in seen:
+#             seen.add(key)
+#             result.append(pair)
+#
+#     return result
 
 
 if __name__ == "__main__":

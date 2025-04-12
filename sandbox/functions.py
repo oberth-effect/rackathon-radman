@@ -1,4 +1,3 @@
-from enum import Enum
 from datetime import time, datetime
 
 import math
@@ -11,48 +10,28 @@ from sandbox.classes_and_constants import (
     Compound,
     Patient,
     Procedure,
-    PROCEDURES,
     COMPOUNDS,
+    DAY_START,
+    Scheme,
+    PROC,
+    STEP,
+    DAY_LEN,
 )
 
-class Scheme(Enum):
-  FDGO = 0
-  FDGB = 1
-  Vizamyl = 2
-  SomaKit = 3
-  PSMA = 4
-  Methionin_1 = 5
-  Methionin_2 = 6
-  Break = 7
-
-  @classmethod
-  def variants(cls):
-    return tuple(cls)
-
-PROC = {
-  Scheme.FDGO: PROCEDURES["18F-FDG (onko)"],
-  Scheme.FDGB: PROCEDURES["18F-FDG (neuro)"],
-  Scheme.Vizamyl: PROCEDURES["18F-viza"],
-  Scheme.SomaKit: PROCEDURES["68Ga-SomaKit"],
-  Scheme.PSMA: PROCEDURES["68Ga-PSMA"],
-  Scheme.Methionin_1: PROCEDURES["11C-MET"],
-}
-
-DAY_LEN_HRS = 8 * 60
-DAY_START = time(6, 0)
-STEP = 5
-DAY_LEN = DAY_LEN_HRS // STEP
 
 def min2time(min: int):
     return time(min // 60, min % 60)
+
 
 def add(t1, t2):
     m1 = t1.hour * 60 + t1.minute
     m2 = t2.hour * 60 + t2.minute
     return min2time(m1 + m2)
 
+
 def diff(t1, t2):
     return (t1.hour * 60 + t1.minute) - (t2.hour * 60 + t2.minute)
+
 
 def any_overlap(blocks_to_add, blocked_blocks):
     blocks_to_add = np.array(blocks_to_add)
@@ -66,6 +45,7 @@ def any_overlap(blocks_to_add, blocked_blocks):
     overlaps = (s1 < e2) & (s2 < e1)
 
     return np.any(overlaps)
+
 
 def process(permutation):
     t = DAY_START
@@ -81,7 +61,10 @@ def process(permutation):
                 timetable.append((t, sch))
             elif len(measure_time) == 2:
                 m1_s, m2_s = t, add(t, min2time(PROC[sch].waiting_time))
-                m1_e, m2_e = add(m1_s, min2time(measure_time[0])), add(m2_s, min2time(measure_time[1]))
+                m1_e, m2_e = (
+                    add(m1_s, min2time(measure_time[0])),
+                    add(m2_s, min2time(measure_time[1])),
+                )
                 proposed = [[m1_s, m1_e], [m2_s, m2_e]]
                 if len(blocked_times) != 0 and any_overlap(proposed, blocked_times):
                     return None
@@ -93,6 +76,7 @@ def process(permutation):
             t = add(t, min2time(measure_time[0]))
         t = add(t, min2time(STEP))
     return timetable
+
 
 def get_mins_since_last_delivery(
     proc_starts: list[time], delivery_times: list[time]
@@ -187,8 +171,9 @@ def get_doses_to_order_and_profit_for_schedule(
         for rp in doses_to_order
     }
 
+
 def main():
-    counts = [8, 2, 1, 2, 0, 0, 0]
+    counts = [1, 1, 0, 0, 0, 0, 0]
     meas_len = 0
     for cnt, sch in zip(counts, Scheme.variants()):
         if sch == Scheme.Break or sch == Scheme.Methionin_2:
@@ -209,12 +194,8 @@ def main():
         multiset.extend([elem] * count)
     print(multiset)
     perms = multiset_permutations(multiset)
-    print(len(list(perms)))
 
     timetables = [x for x in map(process, perms) if x is not None]
 
-    with open('timetables.pickle', 'wb') as handle:
+    with open("timetables.pickle", "wb") as handle:
         pickle.dump(timetables, handle)
-
-if __name__ == "__main__":
-    main()

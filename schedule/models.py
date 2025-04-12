@@ -12,6 +12,12 @@ class Schedule(models.Model):
     start_time = models.TimeField(blank=True, null=True)
     calculated = models.BooleanField(default=False)
 
+    def desired_activity(self):
+        if self.procedure.required_fixed_dose:
+            return self.procedure.required_fixed_dose
+        else:
+            return self.procedure.required_specific_dose * self.patient.weight
+
 
 class Order(models.Model):
     compound = models.ForeignKey(Compound, on_delete=models.CASCADE)

@@ -11,7 +11,7 @@
         <tr>
             <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Name</th>
             <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Half-Life (minutes)</th>
-            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Price</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Cost</th>
             <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Delivery Times</th>
         </tr>
         </thead>
@@ -24,10 +24,10 @@
                     </a>
                 </td>
                 <td class="border border-gray-300 px-4 py-2">{{ compound.half_life }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ compound.price }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ compound.cost }}</td>
                 <td class="border border-gray-300 px-4 py-2">
                     {% for delivery_time in compound.delivery_times %}
-                        <span class="block">{{ delivery_time.time }}</span>
+                        <span class="block">{{ delivery_time }}</span>
                     {% empty %}
                         <span class="text-gray-500">No delivery times</span>
                     {% endfor %}

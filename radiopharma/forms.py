@@ -6,7 +6,7 @@ from radman.forms import StyledModelForm
 class CompoundForm(StyledModelForm):
     class Meta:
         model = Compound
-        fields = ['name', 'half_life', 'price']
+        fields = ['name', 'half_life', 'cost']
 
 
 class BatchForm(StyledModelForm):

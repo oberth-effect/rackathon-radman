@@ -18,12 +18,6 @@ class CompoundListView(ListView):
         queryset = super().get_queryset()
         return queryset.prefetch_related('deliverytimes_set')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        for compound in context['object_list']:
-            compound.delivery_times = compound.deliverytimes_set.all()
-        return context
-
 
 class CompoundCreateView(CreateView):
     model = Compound

@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 
 from .forms import ScheduleForm
 from .models import Schedule  # Import the Schedule model
+from .calculate import calculate_schedule
 
 class ScheduleListView(ListView):
     model = Schedule
@@ -39,8 +40,12 @@ class ClearScheduleView(View):
 
 class CalculateScheduleView(View):
     def post(self, request, *args, **kwargs):
-        # Placeholder logic for assigning times to Schedule elements
+        schedules = Schedule.objects.all()
+
+        calculate_schedule(list(schedules))
+
         for schedule in Schedule.objects.all():
+
             schedule.start_time = "09:00:00"
             schedule.calculated  = True
             schedule.save()

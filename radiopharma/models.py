@@ -11,7 +11,7 @@ def timediff(time1, time2):
 class Compound(models.Model):
     name = models.CharField(max_length=255)
     half_life = models.DecimalField(decimal_places=2, max_digits=10)
-    price = models.DecimalField(decimal_places=2, max_digits=10)
+    cost = models.DecimalField(decimal_places=2, max_digits=10)
 
     def __str__(self):
         return self.name
@@ -21,6 +21,9 @@ class Compound(models.Model):
         half_life_s = self.half_life * 60
         return math.log(2) / float(half_life_s)
 
+    @property
+    def delivery_times(self):
+        return [t.time for t in self.deliverytimes_set.all()]
 
 class Batch(models.Model):
     batch_name = models.CharField(max_length=255)

@@ -234,7 +234,7 @@ def get_doses_to_order_and_cost_for_schedule(
 
 
 def main():
-    counts = [6, 6, 0, 0, 0, 0, 0]
+    counts = [1, 2, 0, 0, 0, 0, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -253,7 +253,7 @@ def main():
             print(f"Perm {i}/{len(perms)}")
         perm_solutions = []
         solve(TIMETABLE, [], perm, perm_solutions)
-        solutions.append(perm_solutions)
+        solutions += perm_solutions
 
     with open("timetables.pickle", "wb") as handle:
         pickle.dump(solutions, handle)

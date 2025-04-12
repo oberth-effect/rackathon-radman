@@ -146,10 +146,10 @@ def reorder_patients_by_activity(
 def get_patient_order_for_procedure_order(
     ts_and_procedures: list[tuple[datetime.time, Procedure]],
     patients: list[Patient],
-) -> dict[time, tuple[Procedure, Patient]] | None:
+) -> list[tuple[datetime.time, tuple[Procedure, Patient]]] | None:
     # get optimal schedule of patients from schedule of procedures
 
-    result = {}  # order patient per interval_type according to their activities
+    result = []  # order patient per interval_type according to their activities
     schemes = [ts_and_proc[1] for ts_and_proc in ts_and_procedures]
 
     for scheme in list(set(schemes)):  # iterate over unique procedures
@@ -183,13 +183,13 @@ def get_patient_order_for_procedure_order(
             patients_proc, mins_since_last_del
         )
         for proc_start, i in zip(procedure_starts, range(len(procedure_starts))):
-            result[proc_start] = (procedure, patients_ordered[i])
+            result.append((proc_start, (procedure, patients_ordered[i])))
 
     return result
 
 
 def get_doses_to_order_and_cost_for_schedule(
-    schedule,
+    schedule: list[tuple[datetime.time, tuple[Procedure, Patient]]],
 ) -> (dict[Compound, dict[time, float]], float):
     compounds_to_be_ordered = [
         cmp for cmp in COMPOUNDS if COMPOUNDS[cmp].delivery_times != Anytime
@@ -200,7 +200,7 @@ def get_doses_to_order_and_cost_for_schedule(
         for comp_name in compounds_to_be_ordered
     }
 
-    for start_time, (procedure, patient) in schedule.items():
+    for start_time, (procedure, patient) in schedule:
         cmp = COMPOUND_TO_NAME.get(id(procedure.compound))  # radiopharm/compound
         a = patient.desired_activity()  # activity
         delivery_time = get_last_delivery_time(

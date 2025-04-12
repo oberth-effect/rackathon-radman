@@ -18,20 +18,14 @@ from sandbox.classes_and_constants import (
 if __name__ == "__main__":
     patients = [
         Patient(id="a", weight=80, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="b", weight=75, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="b", weight=100, procedure=PROC[Timestamp.FDGB]),
         Patient(id="c", weight=90, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="d", weight=80, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="e", weight=75, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="f", weight=90, procedure=PROC[Timestamp.FDGB]),
         Patient(id="g", weight=80, procedure=PROC[Timestamp.FDGO]),
         Patient(id="h", weight=75, procedure=PROC[Timestamp.FDGO]),
         Patient(id="i", weight=90, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="j", weight=80, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="k", weight=75, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="l", weight=90, procedure=PROC[Timestamp.FDGO]),
     ]
 
-    counts = [6, 6, 0, 0, 0, 0, 0]
+    counts = [3, 3, 0, 0, 0, 0, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -47,7 +41,13 @@ if __name__ == "__main__":
     perms = list(multiset_permutations(multiset))
     print(len(perms), perms[0])
     solutions = []
-    solve(TIMETABLE, [], perms[0], solutions)
+
+    for i, perm in enumerate(perms):
+        if i % 10 == 0:
+            print(f"Perm {i}/{len(perms)}")
+        perm_solutions = []
+        solve(TIMETABLE, [], perm, perm_solutions)
+        solutions += perm_solutions
 
     cost_best = None
     patient_order_best = None
@@ -67,3 +67,4 @@ if __name__ == "__main__":
 
     print(f"SCHEDULE: {patient_order_best}")
     print(f"DOSE ORDERS: {doses_to_order_best}")
+    print(f"COST: {cost_best}")

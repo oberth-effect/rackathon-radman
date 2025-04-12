@@ -16,19 +16,20 @@ from sandbox.classes_and_constants import (
 )
 
 if __name__ == "__main__":
-    pat1 = Patient(id="a", weight=80, procedure=PROC[Timestamp.FDGB])
-    pat2 = Patient(id="b", weight=75, procedure=PROC[Timestamp.FDGB])
-    pat3 = Patient(id="c", weight=90, procedure=PROC[Timestamp.FDGB])
-    pat1 = Patient(id="d", weight=80, procedure=PROC[Timestamp.FDGB])
-    pat2 = Patient(id="e", weight=75, procedure=PROC[Timestamp.FDGB])
-    pat3 = Patient(id="f", weight=90, procedure=PROC[Timestamp.FDGB])
-    pat1 = Patient(id="g", weight=80, procedure=PROC[Timestamp.FDGO])
-    pat2 = Patient(id="h", weight=75, procedure=PROC[Timestamp.FDGO])
-    pat3 = Patient(id="i", weight=90, procedure=PROC[Timestamp.FDGO])
-    pat1 = Patient(id="j", weight=80, procedure=PROC[Timestamp.FDGO])
-    pat2 = Patient(id="k", weight=75, procedure=PROC[Timestamp.FDGO])
-    pat3 = Patient(id="l", weight=90, procedure=PROC[Timestamp.FDGO])
-    patients = [pat1, pat2, pat3]
+    patients = [
+        Patient(id="a", weight=80, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="b", weight=75, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="c", weight=90, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="d", weight=80, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="e", weight=75, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="f", weight=90, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="g", weight=80, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="h", weight=75, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="i", weight=90, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="j", weight=80, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="k", weight=75, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="l", weight=90, procedure=PROC[Timestamp.FDGO]),
+    ]
 
     counts = [6, 6, 0, 0, 0, 0, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):

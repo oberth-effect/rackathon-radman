@@ -21,8 +21,8 @@ from sandbox.classes_and_constants import (
 )
 
 
-def min2time(min: int):
-    return time(min // 60, min % 60)
+def min2time(m: int):
+    return time(m // 60, m % 60)
 
 
 def time2min(t: time):
@@ -77,15 +77,23 @@ def solve(timetable, schedule, order, solutions):
         while True:
             s_ms = s_d + wait + acc_time // STEP
             s_me = s_ms + measure_time // STEP
-            colisions = timetable[max(0, s_ms - 1) : s_me + 1] != Timestamp.Empty
+            if s_me > len(timetable):
+                break
+
+            colisions = timetable[max(0, s_ms - 1) : s_me] != Timestamp.Empty
             if np.any(colisions):
                 wait += np.max(np.where(colisions)) + 1
                 continue
+
             proposals[0].append((s_ms, s_me))
             proposals[1].append(wait)
             break
 
+    if len(proposals[1]) == 0:
+        return
+
     for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
+        s_ms, s_me = proposals[0][idx]
         new_timetable = timetable.copy()
         new_timetable[s_ms : s_me + 1] = proc_type
         new_schedule = schedule.copy()

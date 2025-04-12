@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import time
 from enum import Enum
+import numpy as np
 
 
 class Anytime:
@@ -53,7 +54,7 @@ PROCEDURES = {
 }
 
 
-class Scheme(Enum):
+class Timestamp(Enum):
     FDGO = 0
     FDGB = 1
     Vizamyl = 2
@@ -61,7 +62,7 @@ class Scheme(Enum):
     PSMA = 4
     Methionin_1 = 5
     Methionin_2 = 6
-    Break = 7
+    Empty = 7
 
     @classmethod
     def variants(cls):
@@ -69,18 +70,20 @@ class Scheme(Enum):
 
 
 PROC = {
-    Scheme.FDGO: PROCEDURES["18F-FDG (onko)"],
-    Scheme.FDGB: PROCEDURES["18F-FDG (neuro)"],
-    Scheme.Vizamyl: PROCEDURES["18F-viza"],
-    Scheme.SomaKit: PROCEDURES["68Ga-SomaKit"],
-    Scheme.PSMA: PROCEDURES["68Ga-PSMA"],
-    Scheme.Methionin_1: PROCEDURES["11C-MET"],
+    Timestamp.FDGO: PROCEDURES["18F-FDG (onko)"],
+    Timestamp.FDGB: PROCEDURES["18F-FDG (neuro)"],
+    Timestamp.Vizamyl: PROCEDURES["18F-viza"],
+    Timestamp.SomaKit: PROCEDURES["68Ga-SomaKit"],
+    Timestamp.PSMA: PROCEDURES["68Ga-PSMA"],
+    Timestamp.Methionin_1: PROCEDURES["11C-MET"],
 }
 
-DAY_LEN_HRS = 8 * 60
-DAY_START = time(6, 0)
 STEP = 5
+DAY_LEN_HRS = 8 * 60
 DAY_LEN = DAY_LEN_HRS // STEP
+DAY_START = time(6, 0)
+DAY_START_MIN = DAY_START.hour * 60 + DAY_START.minute
+TIMETABLE = np.array([Timestamp.Empty] * DAY_LEN)
 
 
 @dataclass

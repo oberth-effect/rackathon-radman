@@ -1,3 +1,4 @@
+from enum import Enum
 from datetime import time, datetime
 
 import math
@@ -10,12 +11,16 @@ from sandbox.classes_and_constants import (
     Compound,
     Patient,
     Procedure,
+    PROCEDURES,
     COMPOUNDS,
     DAY_START,
-    Scheme,
     PROC,
     STEP,
-    DAY_LEN,
+    DAY_LEN_HRS,
+    DAY_START_MIN,
+    TIMETABLE,
+    Anytime,
+    Timestamp,
     Anytime,
     COMPOUND_TO_NAME,
 )
@@ -23,6 +28,10 @@ from sandbox.classes_and_constants import (
 
 def min2time(min: int):
     return time(min // 60, min % 60)
+
+
+def time2min(t: time):
+    return t.hour * 60 + t.minute
 
 
 def add(t1, t2):
@@ -54,7 +63,7 @@ def process(permutation):
     timetable = []
     blocked_times = []
     for sch in permutation:
-        if sch != Scheme.Break:
+        if sch != Timestamp.Empty:
             measure_time = PROC[sch].measure_time
             if len(measure_time) == 1:
                 proposed = [[t, add(t, min2time(measure_time[0]))]]
@@ -71,14 +80,65 @@ def process(permutation):
                 if len(blocked_times) != 0 and any_overlap(proposed, blocked_times):
                     return None
                 blocked_times.append((m2_s, m2_e))
-                timetable.append((m1_s, Scheme.Methionin_1))
-                timetable.append((m2_s, Scheme.Methionin_2))
+                timetable.append((m1_s, Timestamp.Methionin_1))
+                timetable.append((m2_s, Timestamp.Methionin_2))
             else:
                 raise Exception
             t = add(t, min2time(measure_time[0]))
         t = add(t, min2time(STEP))
     return timetable
 
+def effective_cost(compound, t):
+    return compound.cost * math.exp(compound.half_life * t * 60)
+
+def dist_to_closest(compound, t):
+    if compound.delivery_times == Anytime:
+        return 0
+    t_min = time2min(t)
+    delivery_times = [time2min(d) for d in compound.delivery_times]
+    delivery_times = [t_min - d for d in delivery_times if d <= t_min]
+    if len(delivery_times) == 0:
+        return np.inf
+    return min(delivery_times)
+
+def solve(timetable, schedule, order, solutions):
+    if len(order) == 0:
+        solutions.append(schedule)
+        return
+
+    proc_type = order[0]
+    procedure = PROC[proc_type]
+    measure_slots = [t_m // STEP for t_m in procedure.measure_time]
+
+    acc_time = procedure.acc_time[0]
+    measure_time = procedure.measure_time[0]
+
+    if procedure.compound.delivery_times == Anytime:
+        pass
+
+    for t_d in procedure.compound.delivery_times:
+        wait = 0
+        s_d = (time2min(t_d) - DAY_START_MIN) // STEP
+        if s_d < 0:
+            raise Exception
+
+        proposals = ([], [])
+        while True:
+            s_ms = s_d + wait + acc_time // STEP
+            s_me = s_ms + measure_time // STEP
+            if np.any(timetable[max(0, s_ms-1):s_me+1] != Timestamp.Empty):
+                wait += 1
+                continue
+            proposals[0].append((s_ms, s_me))
+            proposals[1].append(wait)
+            break
+
+        for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
+            new_timetable = timetable.copy()
+            new_timetable[s_ms:s_me+1] = proc_type
+            new_schedule = schedule.copy()
+            new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), procedure))
+            solve(new_timetable, new_schedule, order[1:], solutions)
 
 def get_mins_since_last_delivery(
     proc_starts: list[time], delivery_times: list[time]
@@ -205,29 +265,40 @@ def get_doses_to_order_and_cost_for_schedule(
 
 
 def main():
-    counts = [1, 1, 0, 0, 0, 0, 0]
-    meas_len = 0
-    for cnt, sch in zip(counts, Scheme.variants()):
-        if sch == Scheme.Break or sch == Scheme.Methionin_2:
+    counts = [3, 2, 1, 0, 0, 0, 0]
+    for cnt, sch in zip(counts, Timestamp.variants()):
+        if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
 
-        T_meas = PROC[sch].measure_time
-        if len(T_meas) == 1:
-            meas_len += cnt * (T_meas[0] // 5 + 1)
-        elif len(T_meas) == 2:
-            meas_len += cnt * ((T_meas[0] + T_meas[1]) // 5 + 2)
-        else:
-            raise Exception
-
-    counts.append(DAY_LEN - meas_len)
+    # for cnt, sch in zip(counts, Timestamp.variants()):
+    #     if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
+    #         continue
+    #
+    #     T_meas = PROC[sch].measure_time
+    #     if len(T_meas) == 1:
+    #         meas_len += cnt * (T_meas[0] // 5 + 1)
+    #     elif len(T_meas) == 2:
+    #         meas_len += cnt * ((T_meas[0] + T_meas[1]) // 5 + 2)
+    #     else:
+    #         raise Exception
+    # counts.append(DAY_LEN - meas_len)
     print(counts)
-    multiset = []
-    for count, elem in zip(counts, Scheme.variants()):
-        multiset.extend([elem] * count)
-    print(multiset)
-    perms = multiset_permutations(multiset)
 
-    timetables = [x for x in map(process, perms) if x is not None]
+    multiset = []
+    for count, elem in zip(counts, Timestamp.variants()):
+        if elem == Timestamp.Empty or elem == Timestamp.Methionin_2:
+            continue
+        multiset.extend([elem] * count)
+
+    perms = list(multiset_permutations(multiset))
+    print(len(perms), perms[0])
+    solutions = []
+    solve(TIMETABLE, [], perms[0], solutions)
+
+    print(solutions)
 
     with open("timetables.pickle", "wb") as handle:
-        pickle.dump(timetables, handle)
+        pickle.dump(solutions, handle)
+
+if __name__ == "__main__":
+    main()

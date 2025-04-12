@@ -1,4 +1,3 @@
-from enum import Enum
 from datetime import time, datetime, timedelta
 
 import math
@@ -11,15 +10,11 @@ from sandbox.classes_and_constants import (
     Compound,
     Patient,
     Procedure,
-    PROCEDURES,
     COMPOUNDS,
-    DAY_START,
     PROC,
     STEP,
-    DAY_LEN_HRS,
     DAY_START_MIN,
     TIMETABLE,
-    Anytime,
     Timestamp,
     Anytime,
     COMPOUND_TO_NAME,
@@ -158,9 +153,9 @@ def get_patient_order_for_procedure_order(
         delivery_times = procedure.compound.delivery_times
         acc_time = procedure.acc_time[0]
 
-        def get_proc_start(t, acc_time):
+        def get_proc_start(t, mins):
             datetime_obj = datetime.combine(datetime.today(), t)
-            new_datetime = datetime_obj - timedelta(minutes=acc_time)
+            new_datetime = datetime_obj - timedelta(minutes=mins)
             new_time = new_datetime.time()
             return new_time
 

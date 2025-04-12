@@ -148,15 +148,14 @@ def solve(timetable, schedule, order, milking, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             s_ms, s_me = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_ms:s_me] = proc_type
+            new_timetable[s_ms : s_me] = proc_type
             t_ms = min2time(DAY_START_MIN + s_ms * STEP)
             new_schedule = schedule.copy()
             new_schedule.append((t_ms, proc_type))
             if include_all and milking is None:
-                new_milking = (
-                    t_ms,
-                    add(t_ms, min2time(procedure.compound.delivery_times.cooldown)),
-                )
+                s_m1 = DAY_START_MIN + (s_ms - acc_time) * STEP
+                s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
+                new_milking = (min2time(s_m1), min2time(s_m2))
                 solve(new_timetable, new_schedule, order[1:], new_milking, solutions)
             solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
@@ -259,9 +258,7 @@ def get_doses_to_order_and_cost_for_schedule(
     schedule: list[tuple[datetime.time, tuple[Procedure, Patient]]],
 ) -> (dict[Compound, dict[time, float]], float):
     compounds_to_be_ordered = [
-        cmp
-        for cmp in COMPOUNDS
-        if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
+        cmp for cmp in COMPOUNDS if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
     ]
     # initialize doses_to_order
     doses_to_order = {

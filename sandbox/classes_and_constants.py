@@ -34,12 +34,12 @@ class Procedure:
 
 COMPOUNDS = {
     "18F-FDG": Compound(
-        110, 8900, delivery_times=[time(6, 30), time(10, 30), time(13, 0)]
+        110, 8.9, delivery_times=[time(6, 30), time(10, 30), time(13, 0)]
     ),
-    "11C-MET": Compound(20.4, 25000, delivery_times=[time(11, 0)]),
-    "18F-Viza": Compound(110, 75000, delivery_times=[time(10, 0)]),
-    "68Ga-SomaKit": Compound(68, 75000, delivery_times=Anytime),
-    "68Ga-PSMA": Compound(68, 75000, delivery_times=Anytime),
+    "11C-MET": Compound(20.4, 25, delivery_times=[time(11, 0)]),
+    "18F-Viza": Compound(110, 75, delivery_times=[time(10, 0)]),
+    "68Ga-SomaKit": Compound(68, 75, delivery_times=Anytime),
+    "68Ga-PSMA": Compound(68, 75, delivery_times=Anytime),
 }
 
 COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}

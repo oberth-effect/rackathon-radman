@@ -13,6 +13,7 @@ from sandbox.classes_and_constants import (
     COMPOUNDS,
     PROC,
     STEP,
+    DAY_START,
     DAY_START_MIN,
     TIMETABLE,
     Timestamp,
@@ -51,16 +52,13 @@ def any_overlap(blocks_to_add, blocked_blocks):
     return np.any((s1 < e2) & (s2 < e1))
 
 
-def solve(timetable, schedule, order, solutions):
+def solve(timetable, schedule, order, milking, solutions):
     if len(order) == 0:
         solutions.append(schedule)
         return
 
     proc_type = order[0]
     procedure = PROC[proc_type]
-
-    if procedure.compound.delivery_times == Anytime:
-        pass
 
     proposals = ([], [])
 
@@ -116,7 +114,14 @@ def solve(timetable, schedule, order, solutions):
     elif len(procedure.measure_time) == 1:
         acc_time = procedure.acc_time[0]
         measure_time = procedure.measure_time[0]
-        for t_d in procedure.compound.delivery_times:
+
+        delivery_times = procedure.compound.delivery_times
+        include_all = False
+        if isinstance(delivery_times, Anytime):
+            include_all = True
+            delivery_times = milking if milking else [DAY_START]
+
+        for t_d in delivery_times:
             wait = 0
             s_d = (time2min(t_d) - DAY_START_MIN) // STEP
             if s_d < 0:
@@ -134,7 +139,7 @@ def solve(timetable, schedule, order, solutions):
                     continue
 
                 proposals[0].append((s_ms, s_me))
-                proposals[1].append(wait)
+                proposals[1].append(wait if not include_all else 0)
                 break
 
         if len(proposals[1]) == 0:
@@ -143,10 +148,14 @@ def solve(timetable, schedule, order, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             s_ms, s_me = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_ms:s_me] = proc_type
+            new_timetable[s_ms : s_me] = proc_type
+            t_ms = min2time(DAY_START_MIN + s_ms * STEP)
             new_schedule = schedule.copy()
-            new_schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_type))
-            solve(new_timetable, new_schedule, order[1:], solutions)
+            new_schedule.append((t_ms, proc_type))
+            if include_all and milking is None:
+                new_milking = (t_ms, add(t_ms, min2time(procedure.compound.delivery_times.cooldown)))
+                solve(new_timetable, new_schedule, order[1:], new_milking, solutions)
+            solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
 
 def get_mins_since_last_delivery(
@@ -239,7 +248,7 @@ def get_doses_to_order_and_cost_for_schedule(
     schedule: list[tuple[datetime.time, tuple[Procedure, Patient]]],
 ) -> (dict[Compound, dict[time, float]], float):
     compounds_to_be_ordered = [
-        cmp for cmp in COMPOUNDS if COMPOUNDS[cmp].delivery_times != Anytime
+        cmp for cmp in COMPOUNDS if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
     ]
     # initialize doses_to_order
     doses_to_order = {
@@ -281,7 +290,7 @@ def get_doses_to_order_and_cost_for_schedule(
 
 
 def main():
-    counts = [1, 2, 0, 0, 0, 1, 0]
+    counts = [1, 2, 0, 1, 0, 1, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -299,7 +308,7 @@ def main():
         if i % 10 == 0:
             print(f"Perm {i}/{len(perms)}")
         perm_solutions = []
-        solve(TIMETABLE, [], perm, perm_solutions)
+        solve(TIMETABLE, [], perm, None, perm_solutions)
         solutions += perm_solutions
 
     with open("timetables.pickle", "wb") as handle:

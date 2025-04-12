@@ -5,7 +5,8 @@ import numpy as np
 
 
 class Anytime:
-    pass
+    def __init__(self, cooldown: int):
+        self.cooldown = cooldown
 
 
 @dataclass
@@ -38,8 +39,8 @@ COMPOUNDS = {
     ),
     "11C-MET": Compound(20.4, 25, delivery_times=[time(11, 0)]),
     "18F-Viza": Compound(110, 75, delivery_times=[time(10, 0)]),
-    "68Ga-SomaKit": Compound(68, 75, delivery_times=Anytime),
-    "68Ga-PSMA": Compound(68, 75, delivery_times=Anytime),
+    "68Ga-SomaKit": Compound(68, 75, delivery_times=Anytime(6*60)),
+    "68Ga-PSMA": Compound(68, 75, delivery_times=Anytime(6*60)),
 }
 
 COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}
@@ -50,7 +51,7 @@ PROCEDURES = {
     "18F-viza": Procedure(COMPOUNDS["18F-Viza"], [90], [20], None, 185),
     "68Ga-SomaKit": Procedure(COMPOUNDS["68Ga-SomaKit"], [60], [30], 1.85),
     "68Ga-PSMA": Procedure(COMPOUNDS["68Ga-PSMA"], [60], [30], 2),
-    "11C-MET": Procedure(COMPOUNDS["11C-MET"], [0, 0], [20, 20], 4.5, waiting_time=90),
+    "11C-MET": Procedure(COMPOUNDS["11C-MET"], [0, 0], [20, 20], 4.5, waiting_time=70),
 }
 
 

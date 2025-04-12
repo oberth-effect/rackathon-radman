@@ -59,7 +59,7 @@ if __name__ == "__main__":
         )
         if patient_order is not None:
             doses_to_order, cost = get_doses_to_order_and_cost_for_schedule(
-                patient_order
+                patient_order, milking_times
             )
 
             if (cost_best is None) or (cost < cost_best):

@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import time, datetime
+from datetime import time, datetime, timedelta
 
 import math
 import numpy as np
@@ -156,8 +156,16 @@ def get_patient_order_for_procedure_order(
             patient for patient in patients if patient.procedure == procedure
         ]
         delivery_times = procedure.compound.delivery_times
+        acc_time = procedure.acc_time[0]
+
+        def get_proc_start(t, acc_time):
+            datetime_obj = datetime.combine(datetime.today(), t)
+            new_datetime = datetime_obj - timedelta(minutes=acc_time)
+            new_time = new_datetime.time()
+            return new_time
+
         procedure_starts = [
-            ts_and_proc[0]
+            get_proc_start(ts_and_proc[0], acc_time)
             for ts_and_proc in ts_and_procedures
             if ts_and_proc[1] == scheme
         ]
@@ -239,7 +247,7 @@ def main():
 
     for i, perm in enumerate(perms):
         if i % 10 == 0:
-            print(f'Perm {i}/{len(perms)}')
+            print(f"Perm {i}/{len(perms)}")
         perm_solutions = []
         solve(TIMETABLE, [], perm, perm_solutions)
         solutions.append(perm_solutions)

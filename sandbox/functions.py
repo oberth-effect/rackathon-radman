@@ -148,12 +148,15 @@ def solve(timetable, schedule, order, milking, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             s_ms, s_me = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_ms : s_me] = proc_type
+            new_timetable[s_ms:s_me] = proc_type
             t_ms = min2time(DAY_START_MIN + s_ms * STEP)
             new_schedule = schedule.copy()
             new_schedule.append((t_ms, proc_type))
             if include_all and milking is None:
-                new_milking = (t_ms, add(t_ms, min2time(procedure.compound.delivery_times.cooldown)))
+                new_milking = (
+                    t_ms,
+                    add(t_ms, min2time(procedure.compound.delivery_times.cooldown)),
+                )
                 solve(new_timetable, new_schedule, order[1:], new_milking, solutions)
             solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
@@ -203,6 +206,7 @@ def reorder_patients_by_activity(
 def get_patient_order_for_procedure_order(
     ts_and_procedures: list[tuple[datetime.time, Timestamp]],
     patients: list[Patient],
+    milking_times: tuple[datetime.time, datetime.time] | None,
 ) -> list[tuple[datetime.time, tuple[Procedure, Patient]]] | None:
     # get optimal schedule of patients from schedule of procedures
     result = []  # order patient per interval_type according to their activities
@@ -218,6 +222,10 @@ def get_patient_order_for_procedure_order(
             patient for patient in patients if patient.procedure == procedure
         ]
         delivery_times = procedure.compound.delivery_times
+
+        if isinstance(procedure.compound.delivery_times, Anytime):
+            delivery_times = list(milking_times)
+
         acc_time = procedure.acc_time[0]
 
         def get_proc_start(t, mins):
@@ -251,7 +259,9 @@ def get_doses_to_order_and_cost_for_schedule(
     schedule: list[tuple[datetime.time, tuple[Procedure, Patient]]],
 ) -> (dict[Compound, dict[time, float]], float):
     compounds_to_be_ordered = [
-        cmp for cmp in COMPOUNDS if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
+        cmp
+        for cmp in COMPOUNDS
+        if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
     ]
     # initialize doses_to_order
     doses_to_order = {

@@ -39,8 +39,8 @@ COMPOUNDS = {
     ),
     "11C-MET": Compound(20.4, 25, delivery_times=[time(11, 0)]),
     "18F-Viza": Compound(110, 75, delivery_times=[time(10, 0)]),
-    "68Ga-SomaKit": Compound(68, 75, delivery_times=Anytime(6*60)),
-    "68Ga-PSMA": Compound(68, 75, delivery_times=Anytime(6*60)),
+    "68Ga-SomaKit": Compound(68, 75, delivery_times=Anytime(6 * 60)),
+    "68Ga-PSMA": Compound(68, 75, delivery_times=Anytime(6 * 60)),
 }
 
 COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}
@@ -86,9 +86,8 @@ DAY_START = time(6, 0)
 DAY_START_MIN = DAY_START.hour * 60 + DAY_START.minute
 TIMETABLE = np.array([Timestamp.Empty] * DAY_LEN)
 A_GE_0 = 1.85 * 10**3
-lambda_GE = 0.00256/24/60
+lambda_GE = 0.00256 / 24 / 60
 lambda_GA = 0.0102
-
 
 
 @dataclass

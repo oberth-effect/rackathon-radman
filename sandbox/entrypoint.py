@@ -44,7 +44,7 @@ if __name__ == "__main__":
         if i % 10 == 0:
             print(f"Perm {i}/{len(perms)}")
         perm_solutions = []
-        solve(TIMETABLE, [], perm, perm_solutions)
+        solve(TIMETABLE, [], perm, None, perm_solutions)
         solutions += perm_solutions
 
     cost_best = None
@@ -53,8 +53,10 @@ if __name__ == "__main__":
 
     #solutions_deduplicated = deduplicate(solutions)
 
-    for procedure_perm in solutions:
-        patient_order = get_patient_order_for_procedure_order(procedure_perm, patients)
+    for procedure_perm, milking_times in solutions:
+        patient_order = get_patient_order_for_procedure_order(
+            procedure_perm, patients, milking_times
+        )
         if patient_order is not None:
             doses_to_order, cost = get_doses_to_order_and_cost_for_schedule(
                 patient_order

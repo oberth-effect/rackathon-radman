@@ -96,7 +96,12 @@ def get_mins_since_last_delivery(
 def reorder_patients_by_activity(
     patients: list[Patient], mins_since_last_del_list: list[int]
 ) -> list[Patient]:
-    patients_sorted = sorted(patients, key=lambda p: p.activity_absolute, reverse=True)
+    patients_sorted = sorted(
+        patients,
+        key=lambda p: p.procedure.required_fixed_dose
+        or p.weight * p.procedure.required_specific_dose,
+        reverse=True,
+    )
     mins_indices_sorted_by_value = sorted(
         range(len(mins_since_last_del_list)), key=lambda i: mins_since_last_del_list[i]
     )
@@ -115,10 +120,11 @@ def get_patient_order_for_procedure_order(
     # get optimal schedule of patients from schedule of procedures
 
     result = {}  # order patient per interval_type according to their activities
-    procedures = [ts_and_proc[1] for ts_and_proc in ts_and_procedures]
+    schemes = [ts_and_proc[1] for ts_and_proc in ts_and_procedures]
 
-    for procedure in list(set(procedures)):  # iterate over unique procedures
+    for scheme in list(set(schemes)):  # iterate over unique procedures
         # get all patients with this procedure
+        procedure = PROC[scheme]
         patients_proc = [
             patient for patient in patients if patient.procedure == procedure
         ]
@@ -126,7 +132,7 @@ def get_patient_order_for_procedure_order(
         procedure_starts = [
             ts_and_proc[0]
             for ts_and_proc in ts_and_procedures
-            if ts_and_proc[1] == procedure
+            if ts_and_proc[1] == scheme
         ]
 
         mins_since_last_del = get_mins_since_last_delivery(

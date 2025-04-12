@@ -30,7 +30,7 @@ from sandbox.classes_and_constants import (
 
 if __name__ == "__main__":
     pat1 = Patient(id="a", weight=80, procedure=PROC[Scheme.FDGB])
-    pat2 = Patient(id="b", weight=75, procedure=PROC[Scheme.FDGO])
+    pat2 = Patient(id="b", weight=75, procedure=PROC[Scheme.FDGB])
     pat3 = Patient(id="c", weight=90, procedure=PROC[Scheme.FDGO])
     patients = [pat1, pat2, pat3]
 

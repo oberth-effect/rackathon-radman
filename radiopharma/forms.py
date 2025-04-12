@@ -1,4 +1,4 @@
-from radiopharma.models import Compound, Batch, UsedDose
+from radiopharma.models import Compound, Batch, UsedDose, DeliveryTimes
 from django import forms
 from radman.forms import StyledModelForm
 
@@ -29,3 +29,11 @@ class UsedDoseForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['batch'].queryset = Batch.objects.filter(discarded=False)
+
+class DeliveryTimesForm(StyledModelForm):
+    class Meta:
+        model = DeliveryTimes
+        fields = ['compound', 'time']
+        widgets = {
+            'time': forms.TimeInput(attrs={'type': 'time', 'class': 'border border-gray-300 rounded p-2'}),
+        }

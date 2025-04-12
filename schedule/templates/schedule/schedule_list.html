@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Schedule</h1>
+
+    <!-- Status Bar -->
+    <div class="mb-4 py-2 px-4 rounded" style="background-color: {{ schedule_status.status_color }}; color: white;">
+        {{ schedule_status.message }}
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+        <a href="{% url 'schedule_add' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Add Schedule
+        </a>
+        <form method="post" action="{% url 'schedule_clear' %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Clear Schedule
+            </button>
+        </form>
+        <form method="post" action="{% url 'schedule_calculate' %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Calculate Schedule
+            </button>
+        </form>
+    </div>
+    <table class="min-w-full table-auto border-collapse border border-gray-300">
+        <thead class="bg-gray-100">
+        <tr>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Patient</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Procedure</th>
+            <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Start Time</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for schedule in object_list %}
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">{{ schedule.patient.name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ schedule.procedure.name }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ schedule.start_time|default:"N/A" }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No schedules available.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}

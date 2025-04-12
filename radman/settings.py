@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'patients',
     'procedures',
     'radiopharma',
+    'schedule',
 ]
 
 MIDDLEWARE = [

@@ -9,3 +9,5 @@ class StyledModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'border border-gray-300 rounded p-2'})
+
+

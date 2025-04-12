@@ -20,6 +20,7 @@ from django.urls import path
 from radiopharma import views as rpv
 from procedures import views as pv
 from patients import views as ptv
+from schedule import views as sv  # Import the schedule views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,5 +39,9 @@ urlpatterns = [
     path('patients/add', ptv.AddPatientView.as_view(), name='patient_add'),
     path('patients/<int:pk>/edit', ptv.EditPatientView.as_view(), name='patient_edit'),
     path('patients/<int:pk>/delete/', ptv.DeletePatientView.as_view(), name='patient_delete'),
-]
 
+    path('', sv.ScheduleListView.as_view(), name='schedule_list'),
+    path('schedule/add', sv.ScheduleCreateView.as_view(), name='schedule_add'),
+    path('schedule/clear/', sv.ClearScheduleView.as_view(), name='schedule_clear'),
+    path('schedule/calculate/', sv.CalculateScheduleView.as_view(), name='schedule_calculate'),
+]

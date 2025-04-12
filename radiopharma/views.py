@@ -1,16 +1,29 @@
 from django.views.generic import ListView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, FormView
 from django.views.generic import UpdateView
+from django.views.generic import DeleteView
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
+from django.forms import modelformset_factory
+from django.shortcuts import get_object_or_404, render
 
-from radiopharma.forms import CompoundForm, BatchForm, UsedDoseForm
-from radiopharma.models import Compound, Batch, UsedDose
+from radiopharma.forms import CompoundForm, BatchForm, UsedDoseForm, DeliveryTimesForm
+from radiopharma.models import Compound, Batch, UsedDose, DeliveryTimes
 from datetime import datetime, time, timedelta
 
 
 class CompoundListView(ListView):
     model = Compound
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.prefetch_related('deliverytimes_set')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for compound in context['object_list']:
+            compound.delivery_times = compound.deliverytimes_set.all()
+        return context
 
 
 class CompoundCreateView(CreateView):
@@ -106,3 +119,4 @@ class UsedDoseCreateView(CreateView):
     form_class = UsedDoseForm
     template_name = 'radiopharma/useddose_form.html'
     success_url = reverse_lazy('batch_list')
+

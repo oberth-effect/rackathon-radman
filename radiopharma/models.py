@@ -51,3 +51,6 @@ class DeliveryTimes(models.Model):
     compound = models.ForeignKey(Compound, on_delete=models.CASCADE)
     time = models.TimeField()
 
+    def __str__(self):
+        return f"{self.time} for {self.compound.name}"
+

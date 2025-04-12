@@ -8,7 +8,7 @@ from sandbox.classes_and_constants import (
 )
 from sandbox.functions import (
     get_patient_order_for_procedure_order,
-    get_doses_to_order_and_profit_for_schedule,
+    get_doses_to_order_and_cost_for_schedule,
     process,
 )
 from enum import Enum
@@ -58,15 +58,21 @@ if __name__ == "__main__":
 
     procedure_permutations = [x for x in map(process, perms) if x is not None]
 
-    profit_best = 0
+    cost_best = None
     patient_order_best = None
     doses_to_order_best = None
 
     for procedure_perm in procedure_permutations:
         patient_order = get_patient_order_for_procedure_order(procedure_perm, patients)
-        doses_to_order, profit = get_doses_to_order_and_profit_for_schedule(
-            patient_order
-        )
-        if profit > profit_best:
-            patient_order_best = patient_order
-            doses_to_order_best = doses_to_order
+        if patient_order is not None:
+            doses_to_order, cost = get_doses_to_order_and_cost_for_schedule(
+                patient_order
+            )
+
+            if (cost_best is None) or (cost < cost_best):
+                patient_order_best = patient_order
+                doses_to_order_best = doses_to_order
+                cost_best = cost
+
+    print(f"SCHEDULE: {patient_order_best}")
+    print(f"DOSE ORDERS: {doses_to_order_best}")

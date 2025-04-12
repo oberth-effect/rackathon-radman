@@ -159,11 +159,9 @@ def get_patient_order_for_procedure_order(
     return result
 
 
-def get_doses_to_order_and_profit_for_schedule(
+def get_doses_to_order_and_cost_for_schedule(
     schedule,
 ) -> (dict[Compound, dict[time, float]], float):
-    doses_to_order = {}
-
     compounds_to_be_ordered = [
         cmp for cmp in COMPOUNDS if COMPOUNDS[cmp].delivery_times != Anytime
     ]
@@ -181,20 +179,29 @@ def get_doses_to_order_and_profit_for_schedule(
         )
         ssd = diff(start_time, delivery_time) * 60  # seconds since delivery
 
-        doses_to_order[cmp][delivery_time][1].append(ssd)
-        doses_to_order[cmp][delivery_time][0] += (
+        activity_to_add = (
             math.exp(
-                procedure.compound.half_life
+                math.log(2)
+                / (procedure.compound.half_life * 60)
                 * sum(doses_to_order[cmp][delivery_time][1])
             )
             * a
         )
+        doses_to_order[cmp][delivery_time] = (
+            doses_to_order[cmp][delivery_time][0] + activity_to_add,
+            doses_to_order[cmp][delivery_time][1] + [ssd],
+        )
+
+    cost = 0
+    for cmp, cmp_dose_dict in doses_to_order.items():
+        price = COMPOUNDS[cmp].cost
+        cost += sum(value[0] for value in cmp_dose_dict.values()) * price
 
     # extract only the first part of the tuple
     return {
         rp: {t: doses_to_order[rp][t][0] for t in doses_to_order[rp]}
         for rp in doses_to_order
-    }
+    }, cost
 
 
 def main():

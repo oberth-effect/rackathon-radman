@@ -86,7 +86,7 @@ def solve(timetable, schedule, order, milking, solutions):
                     break
 
                 colisions_1 = timetable[max(0, s_m1s - 1) : s_m1e] != Timestamp.Empty
-                colisions_2 = timetable[s_m2s - 1 : s_m2s] != Timestamp.Empty
+                colisions_2 = timetable[s_m2s - 1 : s_m2e] != Timestamp.Empty
                 if np.any(colisions_1) or np.any(colisions_2):
                     max_1 = np.max(np.where(colisions_1)) if np.any(colisions_1) else 0
                     max_2 = np.max(np.where(colisions_2)) if np.any(colisions_2) else 0
@@ -103,8 +103,8 @@ def solve(timetable, schedule, order, milking, solutions):
         for idx in np.where(proposals[1] == np.min(proposals[1]))[0].tolist():
             (s_m1s, s_m1e), (s_m2s, s_m2e) = proposals[0][idx]
             new_timetable = timetable.copy()
-            new_timetable[s_m1s:s_m1e] = proc_type
-            new_timetable[s_m2s:s_m2e] = proc_type
+            new_timetable[s_m1s:s_m1e] = Timestamp.Methionin_1
+            new_timetable[s_m2s:s_m2e] = Timestamp.Methionin_2
             new_schedule = schedule.copy()
             new_schedule.append(
                 (min2time(DAY_START_MIN + s_m1s * STEP), Timestamp.Methionin_1)
@@ -158,9 +158,9 @@ def solve(timetable, schedule, order, milking, solutions):
             if include_all and milking is None:
                 s_m1 = DAY_START_MIN + s_ms * STEP - acc_time
                 s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
-                new_milking = (min2time(s_m1), min2time(s_m2))
-                solve(new_timetable, new_schedule, order[1:], new_milking, solutions)
-            solve(new_timetable, new_schedule, order[1:], milking, solutions)
+                solve(new_timetable, new_schedule, order[1:], (min2time(s_m1), min2time(s_m2)), solutions)
+            else:
+                solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
 
 def get_mins_since_last_delivery(

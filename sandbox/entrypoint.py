@@ -1,5 +1,5 @@
-from radman.bara_sandbox.classes_and_constants import Patient, Procedure, COMPOUNDS
-from radman.bara_sandbox.functions import (
+from sandbox.classes_and_constants import Patient, Procedure, COMPOUNDS
+from sandbox.functions import (
     get_patient_order_for_procedure_order,
     get_doses_to_order_and_profit_for_schedule,
 )

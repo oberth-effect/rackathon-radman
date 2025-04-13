@@ -42,9 +42,243 @@
             </tr>
         {% empty %}
             <tr>
-                <td colspan="4" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No schedules available.</td>
+                <td colspan="4" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No schedules
+                    available.
+                </td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+
+    {% if all_calculated and not is_empty %}
+
+        <div id="timeline"></div>
+        <div id="deviceTimeline"></div>
+        <div id="table"></div>
+
+        <script>
+            const dosesToOrderBest = {
+                "11C-MET": {
+                    "11:00": 0
+                },
+                "18F-FDG": {
+                    "06:30": 167.5,
+                    "10:30": 155.0,
+                    "13:00": 0
+                },
+                "18F-Viza": {
+                    "10:00": 0
+                }
+            };
+
+            // Patient Order Best
+            const patientOrderBest = [
+                ["06:30", [
+                    {
+                        acc_time: [60],
+                        measure_time: [25],
+                        required_specific_dose: 2.5,
+                        required_fixed_dose: null,
+                        waiting_time: null,
+                        compound: {
+                            half_life: 110,
+                            cost: 8.9,
+                            delivery_times: ["06:30", "10:30", "13:00"]
+                        }
+                    },
+                    {
+                        id: "a",
+                        weight: 67,
+                        procedure: {
+                            acc_time: [60],
+                            measure_time: [25],
+                            required_specific_dose: 2.5,
+                            required_fixed_dose: null,
+                            waiting_time: null,
+                            compound: {
+                                half_life: 110,
+                                cost: 8.9,
+                                delivery_times: ["06:30", "10:30", "13:00"]
+                            }
+                        }
+                    }
+                ]],
+                ["10:30", [
+                    {
+                        acc_time: [60],
+                        measure_time: [25],
+                        required_specific_dose: 2.5,
+                        required_fixed_dose: null,
+                        waiting_time: null,
+                        compound: {
+                            half_life: 110,
+                            cost: 8.9,
+                            delivery_times: ["06:30", "10:30", "13:00"]
+                        }
+                    },
+                    {
+                        id: "b",
+                        weight: 62,
+                        procedure: {
+                            acc_time: [60],
+                            measure_time: [25],
+                            required_specific_dose: 2.5,
+                            required_fixed_dose: null,
+                            waiting_time: null,
+                            compound: {
+                                half_life: 110,
+                                cost: 8.9,
+                                delivery_times: ["06:30", "10:30", "13:00"]
+                            }
+                        }
+                    }
+                ]]
+            ];// Fill with your dose time mapping
+
+            const plotData = [];
+            const deliveryDict = {};
+            const treatmentDate = new Date(2025, 3, 13); // April 12, 2025 (month is 0-based)
+
+            const combineDateTime = (date, timeStr) => {
+                const [h, m] = timeStr.split(":").map(Number);
+                const d = new Date(date);
+                d.setHours(h, m, 0, 0);
+                return d;
+            };
+
+            // Sort patients by start + accumulation time
+            const sortedVals = [...patientOrderBest].sort((a, b) => {
+                const timeA = combineDateTime(new Date(), a[0]);
+                const timeB = combineDateTime(new Date(), b[0]);
+                const aAcc = a[1][0].acc_time[0];
+                const bAcc = b[1][0].acc_time[0];
+                return timeA.getTime() + aAcc * 60000 - (timeB.getTime() + bAcc * 60000);
+            });
+
+            sortedVals.forEach(([timeKey, [proc, patient]]) => {
+                const startTime = combineDateTime(treatmentDate, timeKey);
+
+                proc.acc_time.forEach((acc, i) => {
+                    const accStart = new Date(startTime);
+                    const accEnd = new Date(accStart.getTime() + acc * 60000);
+
+                    plotData.push({
+                        Patient: patient.id,
+                        Phase: "Accumulation",
+                        Start: accStart,
+                        End: accEnd,
+                        Method: `Method for ${patient.id}`,
+                        Activation: `${proc.required_specific_dose || proc.required_fixed_dose}`
+                    });
+
+                    let measureStart = new Date(accEnd);
+                    if (proc.waiting_time && i === 0) {
+                        measureStart = new Date(measureStart.getTime() + proc.waiting_time * 60000 + proc.measure_time[i] * 60000);
+                    }
+
+                    const measureEnd = new Date(measureStart.getTime() + proc.measure_time[i] * 60000);
+
+                    plotData.push({
+                        Patient: patient.id,
+                        Phase: "Measurement",
+                        Start: measureStart,
+                        End: measureEnd,
+                        Method: `Method for ${patient.id}`,
+                        Activation: `${proc.required_specific_dose || proc.required_fixed_dose}`
+                    });
+                });
+            });
+
+            // Build deliveryDict
+            for (const [compound, timesDict] of Object.entries(dosesToOrderBest)) {
+                for (const [deliveryTime, value] of Object.entries(timesDict)) {
+                    if (value > 0) {
+                        const combinedTime = combineDateTime(treatmentDate, deliveryTime);
+                        deliveryDict[combinedTime.toISOString()] = compound;
+                    }
+                }
+            }
+
+            // Assign unique y-values to patients
+            const uniquePatients = [...new Set(plotData.map(d => d.Patient))].reverse();
+            const patientYMap = {};
+            uniquePatients.forEach((name, i) => patientYMap[name] = i);
+
+            const barHeight = 0.3;
+            const colorMap = {Accumulation: "orange", Measurement: "gray"};
+
+            // Draw blocks as shapes
+            const shapes = plotData.map(row => {
+                const y = patientYMap[row.Patient];
+                const start = row.Start.toISOString();
+                const end = row.End.toISOString();
+                return {
+                    type: "rect",
+                    xref: "x",
+                    yref: "y",
+                    x0: start,
+                    x1: end,
+                    y0: y - barHeight,
+                    y1: y + barHeight,
+                    fillcolor: colorMap[row.Phase],
+                    opacity: 0.8,
+                    line: {width: 0}
+                };
+            });
+
+            // Add delivery vertical lines
+            const deliveryShapes = Object.keys(deliveryDict).map(time => ({
+                type: "line",
+                x0: time,
+                x1: time,
+                yref: "paper",
+                y0: 0,
+                y1: 1,
+                line: {color: "black", width: 1}
+            }));
+
+            // Add delivery annotations
+            const annotations = Object.entries(deliveryDict).map(([time, compound]) => ({
+                x: time,
+                y: 1,
+                yref: "paper",
+                text: compound,
+                showarrow: false,
+                yanchor: "bottom"
+            }));
+
+            // Set up layout
+            const layout = {
+                title: "Patient Treatment Timetable",
+                xaxis: {
+                    title: "Time",
+                    type: "date",
+                    tickformat: "%H:%M"
+                },
+                yaxis: {
+                    title: "Patient",
+                    tickvals: uniquePatients.map(p => patientYMap[p]),
+                    ticktext: uniquePatients,
+                    range: [-1, uniquePatients.length],
+                    autorange: false
+                },
+                shapes: [...shapes, ...deliveryShapes],
+                annotations: annotations,
+                height: 400
+            };
+
+            // Dummy trace for structure
+            const dummyTrace = {
+                x: [],
+                y: [],
+                type: "scatter",
+                mode: "markers"
+            };
+
+            Plotly.newPlot("timeline", [dummyTrace], layout);
+
+
+        </script>
+    {% endif %}
+
 {% endblock content %}

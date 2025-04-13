@@ -4,7 +4,7 @@ from django.views import View
 from django.http import HttpResponseRedirect
 
 from .forms import ScheduleForm
-from .models import Schedule  # Import the Schedule model
+from .models import Schedule, Order  # Import the Schedule model
 from .calculate import calculate_schedule
 
 class ScheduleListView(ListView):
@@ -17,10 +17,15 @@ class ScheduleListView(ListView):
         context = super().get_context_data(**kwargs)
         all_calculated = not Schedule.objects.filter(calculated=False).exists()
         is_empty = not Schedule.objects.exists()
+        if all_calculated and not is_empty:
+            pass
         context['schedule_status'] = {
             'all_calculated': all_calculated,
+            'is_empty': is_empty,
             'message': "Add items and calculate Schedule" if is_empty else ("Schedule Calculated" if all_calculated else "Schedule needs calculation"),
-            'status_color': "gray" if is_empty else ("green" if all_calculated else "orange")
+            'status_color': "gray" if is_empty else ("green" if all_calculated else "orange"),
+            'doses_to_order': {},
+            'patient_order': {},
         }
         return context
 
@@ -35,6 +40,7 @@ class ScheduleCreateView(CreateView):
 class ClearScheduleView(View):
     def post(self, request, *args, **kwargs):
         Schedule.objects.all().delete()
+        Order.objects.all().delete()
         return HttpResponseRedirect(reverse('schedule_list'))
 
 
@@ -44,11 +50,6 @@ class CalculateScheduleView(View):
 
         calculate_schedule(list(schedules))
 
-        for schedule in Schedule.objects.all():
-
-            schedule.start_time = "09:00:00"
-            schedule.calculated  = True
-            schedule.save()
         return HttpResponseRedirect(reverse('schedule_list'))
 
 

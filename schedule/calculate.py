@@ -2,9 +2,9 @@ from sympy.utilities.iterables import multiset_permutations
 import numpy as np
 import math
 
-from .models import Schedule
+from .models import Schedule, Order
 from procedures.models import Procedure
-from radiopharma.models import Compound
+from radiopharma.models import Compound, DeliveryTimes
 from patients.models import Patient
 from datetime import time, datetime, timedelta
 
@@ -338,4 +338,19 @@ def calculate_schedule(schedules: list[Schedule]):
                 doses_to_order_best = doses_to_order
                 cost_best = cost
 
-    raise Exception(cost_best, patient_order_best, doses_to_order_best)
+    for t, (procedure, schedule) in patient_order_best:
+        schedule.start_time = t
+        schedule.calculated = True
+        schedule.save()
+
+    for cmp, (t_dict) in doses_to_order_best.items():
+        comp = Compound.objects.get(pk=cmp)
+        for t, dose in t_dict.items():
+            slot = DeliveryTimes.objects.get(compound=comp, time=t)
+            order = Order(
+                compound=comp,
+                activity=dose,
+                time_slot=slot,
+                qa_activity=0,
+            )
+            order.save()

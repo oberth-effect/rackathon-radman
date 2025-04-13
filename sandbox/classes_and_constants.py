@@ -4,6 +4,10 @@ from enum import Enum
 import numpy as np
 
 
+class CelyHarmonogramJeFPici(Exception):
+    pass
+
+
 class Anytime:
     def __init__(self, cooldown: int):
         self.cooldown = cooldown

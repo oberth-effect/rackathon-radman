@@ -45,6 +45,15 @@ COMPOUNDS = {
 
 COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}
 
+COMPOUND_PRICES = {
+    "18F-FDG": 43.85,
+    "11C-MET": 359.44,
+    "18F-Viza": 44303.01,
+    "68Ga-SomaKit": 202.07,
+    "68Ga-PSMA": 202.07,
+}
+
+
 PROCEDURES = {
     "18F-FDG (onko)": Procedure(COMPOUNDS["18F-FDG"], [60], [25], 2.5),
     "18F-FDG (neuro)": Procedure(COMPOUNDS["18F-FDG"], [0], [60], None, 150),

@@ -158,7 +158,13 @@ def solve(timetable, schedule, order, milking, solutions):
             if include_all and milking is None:
                 s_m1 = DAY_START_MIN + s_ms * STEP - acc_time
                 s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
-                solve(new_timetable, new_schedule, order[1:], (min2time(s_m1), min2time(s_m2)), solutions)
+                solve(
+                    new_timetable,
+                    new_schedule,
+                    order[1:],
+                    (min2time(s_m1), min2time(s_m2)),
+                    solutions,
+                )
             else:
                 solve(new_timetable, new_schedule, order[1:], milking, solutions)
 
@@ -346,17 +352,17 @@ def main():
     print(len(solutions))
 
 
-# def deduplicate(pairs: list[list[tuple]]) -> list[list[tuple]]:
-#     seen = set()
-#     result = []
-#
-#     for pair in pairs:
-#         key = frozenset(pair)  # unordered, hashable
-#         if key not in seen:
-#             seen.add(key)
-#             result.append(pair)
-#
-#     return result
+def deduplicate(big_list: list[list[tuple]]) -> list[list[tuple]]:
+    seen = set()
+    result = []
+
+    for small in big_list:
+        key = frozenset(small[0])  # unordered & hashable
+        if key not in seen:
+            seen.add(key)
+            result.append(small)
+
+    return result
 
 
 if __name__ == "__main__":

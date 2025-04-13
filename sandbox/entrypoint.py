@@ -2,6 +2,8 @@ from sandbox.classes_and_constants import (
     PROC,
     Timestamp,
     TIMETABLE,
+    COMPOUND_TO_NAME,
+    COMPOUND_PRICES,
 )
 from sandbox.functions import (
     get_patient_order_for_procedure_order,
@@ -18,12 +20,13 @@ from sandbox.classes_and_constants import (
 
 if __name__ == "__main__":
     patients = [
-        Patient(id="a", weight=80, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="b", weight=50, procedure=PROC[Timestamp.Methionin_1]),
-        Patient(id="c", weight=120, procedure=PROC[Timestamp.Methionin_1]),
+        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="b", weight=62, procedure=PROC[Timestamp.SomaKit]),
+        Patient(id="c", weight=64, procedure=PROC[Timestamp.SomaKit]),
+        Patient(id="k", weight=100, procedure=PROC[Timestamp.Methionin_1]),
     ]
 
-    counts = [0, 1, 0, 0, 0, 2]
+    counts = [1, 0, 0, 2, 0, 1]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -51,9 +54,9 @@ if __name__ == "__main__":
     patient_order_best = None
     doses_to_order_best = None
 
-    #solutions_deduplicated = deduplicate(solutions)
+    solutions_deduplicated = deduplicate(solutions)
 
-    for procedure_perm, milking_times in solutions:
+    for procedure_perm, milking_times in solutions_deduplicated:
         patient_order = get_patient_order_for_procedure_order(
             procedure_perm, patients, milking_times
         )
@@ -70,3 +73,14 @@ if __name__ == "__main__":
     print(f"SCHEDULE: {patient_order_best}")
     print(f"DOSE ORDERS: {doses_to_order_best}")
     print(f"COST: {cost_best}")
+
+    # get total profit
+    profit = 0
+    for patient in patients:
+        comp = patient.procedure.compound
+        comp_name = COMPOUND_TO_NAME[id(comp)]
+        price = COMPOUND_PRICES[comp_name]
+        act = patients[0].desired_activity()
+        profit += price * act
+
+    print(f"FINAL PROFIT: {profit - cost_best}")

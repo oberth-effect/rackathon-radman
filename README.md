@@ -1,5 +1,5 @@
 # RadMan
-*A Deadline Driven Dev Production featuring Tomáš Červeň, Bára Tížková, Štěpán Venclík and Natália Verkinová*
+*A Deadline Driven Dev Production featuring: Tomáš Červeň, Bára Tížková, Štěpán Venclík, and Natália Verkinová*
 
 ## Instalation and Deployment
 

@@ -55,6 +55,34 @@ def any_overlap(blocks_to_add, blocked_blocks):
     return np.any((s1 < e2) & (s2 < e1))
 
 
+def place_priority(priority):
+    if len(priority) == 0:
+        return TIMETABLE, [], None
+
+    timetable, schedule, milking = TIMETABLE, [], None
+    s_me = 0
+    for patient in priority:
+        procedure = PROC[patient]
+        s_ms = s_me + procedure.acc_time[0] // STEP
+        s_me = s_ms + procedure.measure_time[0] // STEP
+        if isinstance(procedure.delivery_times, Anytime):
+            if milking is None:
+                milking = (s_ms, add(s_ms, min2time(procedure.delivery_times.cooldown)))
+        schedule.append(
+            (min2time(DAY_START_MIN + s_ms * STEP), patient)
+        )
+        timetable[s_ms:s_me] = patient
+        if len(procedure.acc_time) == 2:
+            s_m2s = s_me + procedure.waiting_time // STEP
+            s_m2e = s_m2s + procedure.measure_time[1] // STEP
+            timetable[s_m2s:s_m2e] = patient
+            schedule.append(
+                (min2time(DAY_START_MIN + s_m2s * STEP), patient)
+            )
+            s_me = s_m2e
+    return timetable, schedule, milking
+
+
 def solve(timetable, schedule, order, milking, solutions):
     if len(order) == 0:
         solutions.append((schedule, milking))

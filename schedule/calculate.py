@@ -77,7 +77,7 @@ def solve(timetable, schedule, order, milking, solutions, procedures_dict):
                     break
 
                 colisions_1 = timetable[max(0, s_m1s - 1): s_m1e] != EMPTY
-                colisions_2 = timetable[s_m2s - 1: s_m2s] != EMPTY
+                colisions_2 = timetable[s_m2s - 1: s_m2e] != EMPTY
                 if np.any(colisions_1) or np.any(colisions_2):
                     max_1 = np.max(np.where(colisions_1)) if np.any(colisions_1) else 0
                     max_2 = np.max(np.where(colisions_2)) if np.any(colisions_2) else 0
@@ -149,9 +149,9 @@ def solve(timetable, schedule, order, milking, solutions, procedures_dict):
             if include_all and milking is None:
                 s_m1 = DAY_START_MIN + s_ms * STEP - acc_time
                 s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
-                new_milking = (min2time(s_m1), min2time(s_m2))
-                solve(new_timetable, new_schedule, order[1:], new_milking, solutions, procedures_dict)
-            solve(new_timetable, new_schedule, order[1:], milking, solutions, procedures_dict)
+                solve(new_timetable, new_schedule, order[1:], (min2time(s_m1), min2time(s_m2)), solutions, procedures_dict)
+            else:
+                solve(new_timetable, new_schedule, order[1:], milking, solutions, procedures_dict)
 
 
 def get_mins_since_last_delivery(

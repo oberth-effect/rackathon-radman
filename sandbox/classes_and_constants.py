@@ -55,7 +55,7 @@ COMPOUND_PRICES = {
 
 
 PROCEDURES = {
-    "18F-FDG (onko)": Procedure(COMPOUNDS["18F-FDG"], [60], [25], 2.5),
+    "18F-FDG (onko)": Procedure(COMPOUNDS["18F-FDG"], [60], [25], 3.5),
     "18F-FDG (neuro)": Procedure(COMPOUNDS["18F-FDG"], [0], [60], None, 150),
     "18F-viza": Procedure(COMPOUNDS["18F-Viza"], [90], [20], None, 185),
     "68Ga-SomaKit": Procedure(COMPOUNDS["68Ga-SomaKit"], [60], [30], 1.85),

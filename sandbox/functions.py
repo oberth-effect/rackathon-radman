@@ -66,28 +66,24 @@ def place_priority(priority):
         s_ms = (time2min(time) - DAY_START_MIN) // STEP
         s_me = s_ms + procedure.measure_time[0] // STEP
 
-        colisions_1 = timetable[s_ms : s_me] != Timestamp.Empty
+        colisions_1 = timetable[s_ms:s_me] != Timestamp.Empty
         if np.any(colisions_1):
             raise CelyHarmonogramJeFPici
 
-        if isinstance(procedure.delivery_times, Anytime):
+        if isinstance(procedure.compound.delivery_times, Anytime):
             if milking is None:
                 milking = (s_ms, add(s_ms, min2time(procedure.delivery_times.cooldown)))
-        schedule.append(
-            (min2time(DAY_START_MIN + s_ms * STEP), proc_id)
-        )
+        schedule.append((min2time(DAY_START_MIN + s_ms * STEP), proc_id))
         timetable[s_ms:s_me] = proc_id
         if len(procedure.acc_time) == 2:
             s_m2s = s_me + procedure.waiting_time // STEP
             s_m2e = s_m2s + procedure.measure_time[1] // STEP
-            colisions_2 = timetable[s_m2s : s_m2e] != Timestamp.Empty
+            colisions_2 = timetable[s_m2s:s_m2e] != Timestamp.Empty
             if np.any(colisions_2):
                 raise CelyHarmonogramJeFPici
 
             timetable[s_m2s:s_m2e] = proc_id
-            schedule.append(
-                (min2time(DAY_START_MIN + s_m2s * STEP), proc_id)
-            )
+            schedule.append((min2time(DAY_START_MIN + s_m2s * STEP), proc_id))
 
     return timetable, schedule, milking
 

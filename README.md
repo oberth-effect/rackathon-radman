@@ -39,5 +39,5 @@ The solver was created outside Django web app. The folder `sandbox/` contains st
 and includes some features not yet implemented in the WebApp.
 
 ## License
-
+The Program is licensed under the terms of the [CRAPL License](https://matt.might.net/articles/crapl/); upon request, a relicensing under the [GLWTPL License](https://github.com/me-shaon/GLWTPL) will be provided.
 

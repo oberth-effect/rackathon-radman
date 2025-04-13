@@ -1,6 +1,9 @@
 # RadMan
 *A Deadline Driven Dev Production featuring: Tomáš Červeň, Bára Tížková, Štěpán Venclík, and Natália Verkinová*
 
+## Demo
+A Demo version of this app is (as of 11:45 13.04.2025) running at: https://radman.venclik.eu/
+
 ## Instalation and Deployment
 
 ### Requirements

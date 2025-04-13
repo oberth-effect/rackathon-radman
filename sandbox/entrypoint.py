@@ -53,6 +53,7 @@ if __name__ == "__main__":
     cost_best = None
     patient_order_best = None
     doses_to_order_best = None
+    milking_times_best = None
 
     solutions_deduplicated = deduplicate(solutions)
 
@@ -69,9 +70,11 @@ if __name__ == "__main__":
                 patient_order_best = patient_order
                 doses_to_order_best = doses_to_order
                 cost_best = cost
+                milking_times_best = list(milking_times)
 
     print(f"SCHEDULE: {patient_order_best}")
     print(f"DOSE ORDERS: {doses_to_order_best}")
+    print(f"MILKING TIMES: {milking_times_best}")
     print(f"COST: {cost_best}")
 
     # get total profit

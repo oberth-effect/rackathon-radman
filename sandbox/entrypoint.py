@@ -4,6 +4,7 @@ from sandbox.classes_and_constants import (
     TIMETABLE,
     COMPOUND_TO_NAME,
     COMPOUND_PRICES,
+    Anytime,
 )
 from sandbox.functions import (
     get_patient_order_for_procedure_order,
@@ -21,12 +22,14 @@ from sandbox.classes_and_constants import (
 if __name__ == "__main__":
     patients = [
         Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGB]),
+        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGB]),
         Patient(id="b", weight=62, procedure=PROC[Timestamp.SomaKit]),
         Patient(id="c", weight=64, procedure=PROC[Timestamp.SomaKit]),
         Patient(id="k", weight=100, procedure=PROC[Timestamp.Methionin_1]),
     ]
 
-    counts = [1, 0, 0, 2, 0, 1]
+    counts = [1, 2, 0, 2, 0, 1]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -53,7 +56,7 @@ if __name__ == "__main__":
     cost_best = None
     patient_order_best = None
     doses_to_order_best = None
-    milking_times_best = None
+    milking_times_theoretical = []
 
     solutions_deduplicated = deduplicate(solutions)
 
@@ -70,12 +73,7 @@ if __name__ == "__main__":
                 patient_order_best = patient_order
                 doses_to_order_best = doses_to_order
                 cost_best = cost
-                milking_times_best = list(milking_times)
-
-    print(f"SCHEDULE: {patient_order_best}")
-    print(f"DOSE ORDERS: {doses_to_order_best}")
-    print(f"MILKING TIMES: {milking_times_best}")
-    print(f"COST: {cost_best}")
+                milking_times_theoretical = list(milking_times)
 
     # get total profit
     profit = 0
@@ -86,4 +84,17 @@ if __name__ == "__main__":
         act = patients[0].desired_activity()
         profit += price * act
 
+    milking_patients_times = [
+        t
+        for t, val in patient_order_best
+        if isinstance(val[0].compound.delivery_times, Anytime)
+    ]
+    milking_times_best = list(
+        set(milking_patients_times) & set(milking_times_theoretical)
+    )
+
+    print(f"SCHEDULE: {patient_order_best}")
+    print(f"DOSE ORDERS: {doses_to_order_best}")
+    print(f"MILKING TIMES: {milking_times_best}")
+    print(f"COST: {cost_best}")
     print(f"FINAL PROFIT: {profit - cost_best}")

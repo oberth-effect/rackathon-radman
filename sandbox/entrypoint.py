@@ -20,16 +20,21 @@ from sandbox.classes_and_constants import (
 )
 
 if __name__ == "__main__":
+
+
+
     patients = [
-        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGO]),
-        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="a", weight=67, procedure=PROC[Timestamp.FDGB]),
-        Patient(id="b", weight=62, procedure=PROC[Timestamp.SomaKit]),
-        Patient(id="c", weight=64, procedure=PROC[Timestamp.SomaKit]),
-        Patient(id="k", weight=100, procedure=PROC[Timestamp.Methionin_1]),
+        Patient(id="Alice", weight=66, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Bob", weight=70, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Cecil", weight=78, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Daniel", weight=70, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Jarmila", weight=86, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Petr", weight=59, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Lucie", weight=60, procedure=PROC[Timestamp.FDGO]),
+        Patient(id="Simona", weight=88, procedure=PROC[Timestamp.FDGO]),
     ]
 
-    counts = [1, 2, 0, 2, 0, 1]
+    counts = [8, 0, 0, 0, 0, 0]
     for cnt, sch in zip(counts, Timestamp.variants()):
         if sch == Timestamp.Empty or sch == Timestamp.Methionin_2:
             continue
@@ -73,7 +78,7 @@ if __name__ == "__main__":
                 patient_order_best = patient_order
                 doses_to_order_best = doses_to_order
                 cost_best = cost
-                milking_times_theoretical = list(milking_times)
+                milking_times_theoretical = [] if not milking_times else list(milking_times)
 
     # get total profit
     profit = 0

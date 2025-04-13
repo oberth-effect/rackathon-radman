@@ -28,3 +28,6 @@ class Order(models.Model):
 class ScheduleSettings(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
+
+class MilkingTimes(models.Model):
+    time = models.TimeField()

@@ -12,6 +12,7 @@ class Compound(models.Model):
     name = models.CharField(max_length=255)
     half_life = models.DecimalField(decimal_places=2, max_digits=10)
     cost = models.DecimalField(decimal_places=2, max_digits=10)
+    milkable = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -62,4 +63,5 @@ class DeliveryTimes(models.Model):
 
     def __str__(self):
         return f"{self.time} for {self.compound.name}"
+
 

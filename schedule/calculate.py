@@ -2,7 +2,7 @@ from sympy.utilities.iterables import multiset_permutations
 import numpy as np
 import math
 
-from .models import Schedule, Order
+from .models import Schedule, Order, MilkingTimes
 from procedures.models import Procedure
 from radiopharma.models import Compound, DeliveryTimes
 from patients.models import Patient
@@ -42,6 +42,7 @@ TIMETABLE = np.array([EMPTY] * DAY_LEN)
 A_GE_0 = 1.85 * 10**3
 lambda_GE = 0.00256 / 24 / 60
 lambda_GA = 0.0102
+COOLDOWN = 6*60
 
 
 
@@ -111,9 +112,9 @@ def solve(timetable, schedule, order, milking, solutions, procedures_dict):
 
         delivery_times = [t.time for t in procedure.compound.deliverytimes_set.all()]
         include_all = False
-        # if isinstance(delivery_times, Anytime):
-        #     include_all = True
-        #     delivery_times = milking if milking else [DAY_START]
+        if procedure.compound.milkable:
+            include_all = True
+            delivery_times = milking if milking else [DAY_START]
 
         for t_d in delivery_times:
             wait = 0
@@ -148,7 +149,7 @@ def solve(timetable, schedule, order, milking, solutions, procedures_dict):
             new_schedule.append((t_ms, proc_id))
             if include_all and milking is None:
                 s_m1 = DAY_START_MIN + s_ms * STEP - acc_time
-                s_m2 = s_m1 + procedure.compound.delivery_times.cooldown
+                s_m2 = s_m1 + COOLDOWN
                 solve(new_timetable, new_schedule, order[1:], (min2time(s_m1), min2time(s_m2)), solutions, procedures_dict)
             else:
                 solve(new_timetable, new_schedule, order[1:], milking, solutions, procedures_dict)
@@ -215,8 +216,8 @@ def get_patient_order_for_procedure_order(
         ]
         delivery_times = [t.time for t in procedure.compound.deliverytimes_set.all()]
 
-        # if isinstance(procedure.compound.delivery_times, Anytime):
-        #     delivery_times = list(milking_times)
+        if procedure.compound.milkable:
+            delivery_times = list(milking_times)
 
         acc_time = procedure.accumulation_time
 
@@ -242,24 +243,24 @@ def get_patient_order_for_procedure_order(
             schedules_proc, mins_since_last_del
         )
 
-        # if isinstance(procedure.compound.delivery_times, Anytime):
-        #     # return None if there is not enough activity left for SomaKit/PSMA patients from milking
-        #     remaining_act = {}
-        #     remaining_act[milking_times[0]] = A_GE_0 * math.exp(
-        #         -lambda_GE * diff(milking_times[0], time(0, 0))
-        #     )
-        #     remaining_act[milking_times[1]] = A_GE_0 * math.exp(
-        #         -lambda_GE * diff(milking_times[1], time(0, 0))
-        #     )
-        #     for pat_somakit, p_start in zip(patients_ordered, procedure_starts):
-        #         milk_time = get_last_delivery_time(p_start, delivery_times)
-        #         act_to_deduct = (
-        #             math.exp(lambda_GA * diff(p_start, milk_time))
-        #             * pat_somakit.desired_activity()
-        #         )
-        #         remaining_act[milk_time] = remaining_act[milk_time] - act_to_deduct
-        #         if remaining_act[milk_time] < 0:
-        #             return None
+        if procedure.compound.milkable:
+            # return None if there is not enough activity left for SomaKit/PSMA patients from milking
+            remaining_act = {}
+            remaining_act[milking_times[0]] = A_GE_0 * math.exp(
+                -lambda_GE * diff(milking_times[0], time(0, 0))
+            )
+            remaining_act[milking_times[1]] = A_GE_0 * math.exp(
+                -lambda_GE * diff(milking_times[1], time(0, 0))
+            )
+            for pat_somakit, p_start in zip(patients_ordered, procedure_starts):
+                milk_time = get_last_delivery_time(p_start, delivery_times)
+                act_to_deduct = (
+                    math.exp(lambda_GA * diff(p_start, milk_time))
+                    * float(pat_somakit.desired_activity())
+                )
+                remaining_act[milk_time] = remaining_act[milk_time] - act_to_deduct
+                if remaining_act[milk_time] < 0:
+                    return None
 
         for proc_start, i in zip(procedure_starts, range(len(procedure_starts))):
             result.append((proc_start, (procedure, patients_ordered[i])))
@@ -273,7 +274,7 @@ def get_doses_to_order_and_cost_for_schedule(
     compounds_to_be_ordered = [
         cmp
         for cmp in compound_dict
-        # if not isinstance(COMPOUNDS[cmp].delivery_times, Anytime)
+        if not compound_dict[cmp].milkable
     ]
     # initialize doses_to_order
     doses_to_order = {
@@ -282,8 +283,7 @@ def get_doses_to_order_and_cost_for_schedule(
     }
 
     for start_time, (procedure, patient) in schedule:
-        # if not isinstance(procedure.compound.delivery_times, Anytime):
-        if True:
+        if not procedure.compound.milkable:
             cmp = procedure.compound.pk # radiopharm/compound
             a = patient.desired_activity()  # activity
             delivery_time = get_last_delivery_time(
@@ -323,6 +323,7 @@ def calculate_schedule(schedules: list[Schedule]):
     cost_best = None
     patient_order_best = None
     doses_to_order_best = None
+    milking_times_theoretical = []
 
     for procedure_perm, milking_times in solutions:
         patient_order = get_patient_order_for_procedure_order(
@@ -337,6 +338,7 @@ def calculate_schedule(schedules: list[Schedule]):
                 patient_order_best = patient_order
                 doses_to_order_best = doses_to_order
                 cost_best = cost
+                milking_times_theoretical = [] if not milking_times else list(milking_times)
 
     for t, (procedure, schedule) in patient_order_best:
         schedule.start_time = t
@@ -354,3 +356,17 @@ def calculate_schedule(schedules: list[Schedule]):
                 qa_activity=0,
             )
             order.save()
+
+    milking_patients_times = [
+        t
+        for t, val in patient_order_best
+        if val[0].compound.milkable
+    ]
+
+    milking_times_best = list(
+        set(milking_patients_times) & set(milking_times_theoretical)
+    )
+
+    for t in milking_times_best:
+        miking_time = MilkingTimes(time=t)
+        miking_time.save()

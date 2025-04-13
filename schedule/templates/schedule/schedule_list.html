@@ -38,7 +38,7 @@
             <tr class="hover:bg-gray-50">
                 <td class="border border-gray-300 px-4 py-2">{{ schedule.patient.name }}</td>
                 <td class="border border-gray-300 px-4 py-2">{{ schedule.procedure.name }}</td>
-                <td class="border border-gray-300 px-4 py-2">{{ schedule.start_time|default:"N/A" }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ schedule.start_time|date:"H:i"|default:"N\A" }}</td>
             </tr>
         {% empty %}
             <tr>
@@ -49,104 +49,34 @@
         {% endfor %}
         </tbody>
     </table>
+    </table>
 
-    {% if all_calculated and not is_empty %}
+    {% if schedule_status.all_calculated and not schedule_status.is_empty %}
 
         <div id="timeline"></div>
         <div id="deviceTimeline"></div>
         <div id="table"></div>
 
         <script>
-            const dosesToOrderBest = {
-                "11C-MET": {
-                    "11:00": 0
-                },
-                "18F-FDG": {
-                    "06:30": 167.5,
-                    "10:30": 155.0,
-                    "13:00": 0
-                },
-                "18F-Viza": {
-                    "10:00": 0
-                }
-            };
+            const dosesToOrderBest = JSON.parse('{{ doses_to_order|safe }}');
+            console.log(dosesToOrderBest);
 
             // Patient Order Best
-            const patientOrderBest = [
-                ["06:30", [
-                    {
-                        acc_time: [60],
-                        measure_time: [25],
-                        required_specific_dose: 2.5,
-                        required_fixed_dose: null,
-                        waiting_time: null,
-                        compound: {
-                            half_life: 110,
-                            cost: 8.9,
-                            delivery_times: ["06:30", "10:30", "13:00"]
-                        }
-                    },
-                    {
-                        id: "a",
-                        weight: 67,
-                        procedure: {
-                            acc_time: [60],
-                            measure_time: [25],
-                            required_specific_dose: 2.5,
-                            required_fixed_dose: null,
-                            waiting_time: null,
-                            compound: {
-                                half_life: 110,
-                                cost: 8.9,
-                                delivery_times: ["06:30", "10:30", "13:00"]
-                            }
-                        }
-                    }
-                ]],
-                ["10:30", [
-                    {
-                        acc_time: [60],
-                        measure_time: [25],
-                        required_specific_dose: 2.5,
-                        required_fixed_dose: null,
-                        waiting_time: null,
-                        compound: {
-                            half_life: 110,
-                            cost: 8.9,
-                            delivery_times: ["06:30", "10:30", "13:00"]
-                        }
-                    },
-                    {
-                        id: "b",
-                        weight: 62,
-                        procedure: {
-                            acc_time: [60],
-                            measure_time: [25],
-                            required_specific_dose: 2.5,
-                            required_fixed_dose: null,
-                            waiting_time: null,
-                            compound: {
-                                half_life: 110,
-                                cost: 8.9,
-                                delivery_times: ["06:30", "10:30", "13:00"]
-                            }
-                        }
-                    }
-                ]]
-            ];// Fill with your dose time mapping
+            const patientOrderBest = JSON.parse('{{ patient_order|safe }}');// Fill with your dose time mapping
+
+            const milkingTimesBest = {{ milking_times_list | safe }};
 
             const plotData = [];
             const deliveryDict = {};
-            const treatmentDate = new Date(2025, 3, 13); // April 12, 2025 (month is 0-based)
+            const treatmentDate = new Date(2025, 3, 12); // April 12, 2025 (month is 0-based)
 
             const combineDateTime = (date, timeStr) => {
                 const [h, m] = timeStr.split(":").map(Number);
                 const d = new Date(date);
-                d.setHours(h, m, 0, 0);
+                d.setUTCHours(h, m, 0, 0);
                 return d;
             };
 
-            // Sort patients by start + accumulation time
             const sortedVals = [...patientOrderBest].sort((a, b) => {
                 const timeA = combineDateTime(new Date(), a[0]);
                 const timeB = combineDateTime(new Date(), b[0]);
@@ -173,7 +103,7 @@
 
                     let measureStart = new Date(accEnd);
                     if (proc.waiting_time && i === 0) {
-                        measureStart = new Date(measureStart.getTime() + proc.waiting_time * 60000 + proc.measure_time[i] * 60000);
+                        measureStart = new Date(measureStart.getTime() + proc.waiting_time * 60000);
                     }
 
                     const measureEnd = new Date(measureStart.getTime() + proc.measure_time[i] * 60000);
@@ -189,7 +119,7 @@
                 });
             });
 
-            // Build deliveryDict
+            // Delivery lines from compound deliveries
             for (const [compound, timesDict] of Object.entries(dosesToOrderBest)) {
                 for (const [deliveryTime, value] of Object.entries(timesDict)) {
                     if (value > 0) {
@@ -199,7 +129,13 @@
                 }
             }
 
-            // Assign unique y-values to patients
+            // Milking deliveries (e.g., Ga)
+            milkingTimesBest.forEach(time => {
+                const combinedTime = combineDateTime(treatmentDate, time);
+                deliveryDict[combinedTime.toISOString()] = "Ga";
+            });
+
+            // Map y-axis values
             const uniquePatients = [...new Set(plotData.map(d => d.Patient))].reverse();
             const patientYMap = {};
             uniquePatients.forEach((name, i) => patientYMap[name] = i);
@@ -207,26 +143,31 @@
             const barHeight = 0.3;
             const colorMap = {Accumulation: "orange", Measurement: "gray"};
 
-            // Draw blocks as shapes
             const shapes = plotData.map(row => {
                 const y = patientYMap[row.Patient];
-                const start = row.Start.toISOString();
-                const end = row.End.toISOString();
                 return {
                     type: "rect",
                     xref: "x",
                     yref: "y",
-                    x0: start,
-                    x1: end,
+                    x0: row.Start.toISOString(),
+                    x1: row.End.toISOString(),
                     y0: y - barHeight,
                     y1: y + barHeight,
                     fillcolor: colorMap[row.Phase],
                     opacity: 0.8,
-                    line: {width: 0}
+                    line: {width: 0},
+                    // Hover information
+                    hoverinfo: "text",
+                    text: `Patient: ${row.Patient}<br>Phase: ${row.Phase}<br>Start: ${new Date(row.Start).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}<br>End: ${new Date(row.End).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}<br>Method: ${row.Method}`
                 };
             });
 
-            // Add delivery vertical lines
             const deliveryShapes = Object.keys(deliveryDict).map(time => ({
                 type: "line",
                 x0: time,
@@ -237,7 +178,6 @@
                 line: {color: "black", width: 1}
             }));
 
-            // Add delivery annotations
             const annotations = Object.entries(deliveryDict).map(([time, compound]) => ({
                 x: time,
                 y: 1,
@@ -247,7 +187,6 @@
                 yanchor: "bottom"
             }));
 
-            // Set up layout
             const layout = {
                 title: "Patient Treatment Timetable",
                 xaxis: {
@@ -267,18 +206,66 @@
                 height: 400
             };
 
-            // Dummy trace for structure
-            const dummyTrace = {
-                x: [],
-                y: [],
+            Plotly.newPlot("timeline", [{
+                x: plotData.map(d => d.Start),
+                y: plotData.map(d => d.Patient),
+                mode: "markers",
+                marker: {opacity: 0},
                 type: "scatter",
-                mode: "markers"
-            };
-
-            Plotly.newPlot("timeline", [dummyTrace], layout);
-
-
+                hoverinfo: "none"
+            }], layout);
         </script>
+
+        </table>
+        <h2 class="text-xl font-bold text-gray-800 mt-8">To Order</h2>
+        <table class="min-w-full table-auto border-collapse border border-gray-300">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Compound</th>
+                <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Time Slot</th>
+                <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Activity</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for order in order_times %}
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2">{{ order.compound.name }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ order.time_slot.time|date:"H:i" }}</td>
+                    <td class="border border-gray-300 px-4 py-2">{{ order.activity|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No order times
+                        available.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        </table>
+        <h2 class="text-xl font-bold text-gray-800 mt-8">Milking Times</h2>
+        <table class="min-w-full table-auto border-collapse border border-gray-300">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="border border-gray-300 px-4 py-2 text-left font-medium text-gray-700">Time</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for t in milking_times %}
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2">{{ t.time|date:"H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="border border-gray-300 px-4 py-2 text-center text-gray-500">No milking times
+                        available.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
     {% endif %}
 
 {% endblock content %}

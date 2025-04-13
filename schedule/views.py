@@ -20,7 +20,8 @@ def _cmpound_to_dict(compound: Compound):
 
 def _proc_to_dict(p: Procedure):
     return {
-        'acc_time': [p.accumulation_time, p.accumulation_time],
+        #'acc_time': [t for t in [p.accumulation_time, p.accumulation_time] if t is not None],
+        'acc_time': [p.accumulation_time] if p.accumulation_time2 is None else [p.accumulation_time, p.accumulation_time],
         'measure_time': [t for t in [p.measuring_time, p.measuring_time2] if t is not None],
         'waiting_time': p.accumulation_time2,
         'required_specific_dose': float(p.required_specific_dose) if p.required_specific_dose else None,

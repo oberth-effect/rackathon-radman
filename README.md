@@ -34,13 +34,10 @@ python manage.py runserver
 > [!CAUTION]
 > For production deployments, see https://docs.djangoproject.com/en/5.1/howto/deployment/
 
-### Logic
+## Logic
 The solver was created outside Django web app. The folder `sandbox/` contains standalone scripts that solve the Schedule, 
 and includes some features not yet implemented in the WebApp.
 
+## License
 
-Let $A_i$ be the used activity for a procedure at a time $t_i$. The remaining activity of a sample is given by
 
-$$
-A(t) = \left(A_{0}-\sum_{i}\frac{A_i}{\mathrm{e}^{-\lambda(t_i-t_0)}}\right)\mathrm{e}^{-\lambda(t-t_0)}.
-$$

@@ -46,7 +46,7 @@ COMPOUNDS = {
 COMPOUND_TO_NAME = {id(v): k for k, v in COMPOUNDS.items()}
 
 COMPOUND_PRICES = {
-    "18F-FDG": 43.85,
+    "18F-FDG": 41.71,
     "11C-MET": 359.44,
     "18F-Viza": 44303.01,
     "68Ga-SomaKit": 202.07,
